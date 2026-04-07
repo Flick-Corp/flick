@@ -1,0 +1,36 @@
+# Copyright (c) 2026 Flick. All Rights Reserved.
+
+default:
+  tags:
+    - linux
+stages:
+  - build
+  - mirror
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  MIRROR_URL: "github.com/matteoepitech/flick.git"
+  BIN_NAME: "flick"
+
+build-job:
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_BRANCH !~ /-noci$/ && $CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH !~ /-noci$/ && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+  script:
+    - |
+      true
+  # artifacts:
+  #   paths:
+  #     - "$BIN_NAME"
+  #   expire_in: 1 hour
+
+mirror-job:
+  stage: mirror
+  needs: [build-job]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+  script:
+    - git remote remove github 2>/dev/null || true
+    - git remote add github https://oauth2:${MIRROR_TOKEN}@${MIRROR_URL}
+    - git push github HEAD:main --force
