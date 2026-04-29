@@ -8,6 +8,7 @@
 package routes
 
 import (
+	"github.com/matteoepitech/flick/internal/api/code"
 	"github.com/matteoepitech/flick/internal/api/logging"
 	"io"
 	"net/http"
@@ -38,8 +39,9 @@ func UploadFileHandler(dataDir string, logger logging.Logger) http.HandlerFunc {
 			return
 		}
 		defer file.Close()
-
-		dst, err := os.Create(dataDir + header.Filename)
+		var codeDir string = code.CodeGen()
+		os.MkdirAll(dataDir+codeDir, 0755)
+		dst, err := os.Create(dataDir + codeDir + "/" + header.Filename)
 		if err != nil {
 			logger.InfoError("Error while uploading a file of code <%s>", header.Filename)
 			http.Error(w, "Cannot save the file", http.StatusInternalServerError)
@@ -53,7 +55,6 @@ func UploadFileHandler(dataDir string, logger logging.Logger) http.HandlerFunc {
 			http.Error(w, "Error while copying the file", http.StatusInternalServerError)
 			return
 		}
-
 		logger.InfoSuccess("Received a file with code <%s> (%d bytes)", header.Filename, fileBytes)
 	}
 }
