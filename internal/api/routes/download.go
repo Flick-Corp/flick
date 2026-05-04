@@ -8,12 +8,54 @@
 package routes
 
 import (
-	"github.com/matteoepitech/flick/internal/api/logging"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strconv"
+
+	"github.com/matteoepitech/flick/internal/api/logging"
 )
+
+// doDownloadMultipartForm: Do the download request.
+//
+// Params:
+// - writer (*multipart.Writer): The writer of the multipart.
+// - entries ([]os.DirEntry): The different entries of the directory.
+// - path (string): The path.
+// - logger (logging.Logger): The logger.
+func doDownloadMultipartForm(writer *multipart.Writer, entries []os.DirEntry, path string, logger logging.Logger) {
+	for _, entry := range entries {
+		fullPath := path + "/" + entry.Name()
+		file, err := os.Open(fullPath)
+
+		if err != nil {
+			logger.InfoError("Cannot open file %s", entry.Name())
+			continue
+		}
+
+		info, err := file.Stat()
+		if err != nil {
+			file.Close()
+			continue
+		}
+
+		part, err := writer.CreateFormFile("file", entry.Name())
+		if err != nil {
+			file.Close()
+			continue
+		}
+
+		_, err = io.Copy(part, file)
+		file.Close()
+
+		if err != nil {
+			continue
+		}
+
+		logger.InfoSuccess("Sent file <%s> (%d bytes)", entry.Name(), info.Size())
+	}
+}
 
 // DownloadFileHandler: Build the download file handler.
 //
@@ -45,40 +87,18 @@ func DownloadFileHandler(dataDir string, logger logging.Logger) http.HandlerFunc
 			return
 		}
 
+		var totalSize int64
+		for _, entry := range entries {
+			if info, err := entry.Info(); err == nil {
+				totalSize += info.Size()
+			}
+		}
+
 		writer := multipart.NewWriter(w)
 		defer writer.Close()
 
 		w.Header().Set("Content-Type", writer.FormDataContentType())
-
-		for _, entry := range entries {
-			fullPath := path + "/" + entry.Name()
-
-			file, err := os.Open(fullPath)
-			if err != nil {
-				logger.InfoError("Cannot open file %s", entry.Name())
-				continue
-			}
-
-			info, err := file.Stat()
-			if err != nil {
-				file.Close()
-				continue
-			}
-
-			part, err := writer.CreateFormFile("file", entry.Name())
-			if err != nil {
-				file.Close()
-				continue
-			}
-
-			_, err = io.Copy(part, file)
-			file.Close()
-
-			if err != nil {
-				continue
-			}
-
-			logger.InfoSuccess("Sent file <%s> (%d bytes)", entry.Name(), info.Size())
-		}
+		w.Header().Set("X-Total-Size", strconv.FormatInt(totalSize, 10))
+		doDownloadMultipartForm(writer, entries, path, logger)
 	}
 }

@@ -16,8 +16,10 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/matteoepitech/flick/internal/cli/config"
+	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 )
 
@@ -67,6 +69,10 @@ func doDownloadRequest(req *http.Request) error {
 		return fmt.Errorf("Failure: Server returned %s", resp.Status)
 	}
 
+	totalSizeStr := resp.Header.Get("X-Total-Size")
+	totalSize, _ := strconv.ParseInt(totalSizeStr, 10, 64)
+	bar := progressbar.DefaultBytes(totalSize, "Downloading")
+
 	contentType := resp.Header.Get("Content-Type")
 	_, params, err := mime.ParseMediaType(contentType)
 	if err != nil {
@@ -91,12 +97,15 @@ func doDownloadRequest(req *http.Request) error {
 		}
 
 		if part.FormName() == "file" {
-			data, err := io.ReadAll(part)
+			file, err := os.Create(part.FileName())
 			if err != nil {
 				return err
 			}
+			defer file.Close()
 
-			err = createFile(part.FileName(), string(data))
+			proxyReader := io.TeeReader(part, bar)
+			_, err = io.Copy(file, proxyReader)
+
 			if err != nil {
 				return err
 			}
