@@ -14,7 +14,7 @@ CLI_PKG="github.com/matteoepitech/flick/internal/cli"
 LDFLAGS="-s -w -X ${CLI_PKG}.CLIVersion=$VERSION -X ${CLI_PKG}.CLICommit=$COMMIT -X ${CLI_PKG}.CLIBuildDate=$BUILD_DATE"
 
 PLATFORMS=("linux/amd64" "linux/arm64" "darwin/amd64" "darwin/arm64" "windows/amd64")
-BINARIES=("api" "cli")
+BINARIES=("cli")
 
 for PLATFORM in "${PLATFORMS[@]}"; do
   GOOS="${PLATFORM%/*}"
