@@ -6,13 +6,15 @@ default:
 stages:
   - build
   - mirror
-  - deploy
+  - release-cli
+  - release-server
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   MIRROR_URL: "github.com/matteoepitech/flick.git"
   BIN_NAME: "flick"
 
+# Build Job
 build-job:
   stage: build
   rules:
@@ -32,8 +34,9 @@ build-job:
       - "./build/bin/"
     expire_in: 1 hour
 
-deploy-job:
-  stage: deploy
+# CLI Release Job
+release-cli-job:
+  stage: release-cli
   needs: [build-job]
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v/'
@@ -52,6 +55,38 @@ deploy-job:
     - rsync -avz -e "ssh $SSH_OPTS" build/bin/version.json deploy@flick.d3l.tech:/var/www/flick/releases/version.json
     - rm -rf "$SSH_DIR"
 
+# Server Release Job
+release-server-job:
+  stage: release-server
+  needs: [build-job]
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v/'
+  image: docker:27
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    REGISTRY_IMAGE: docker.io/$DOCKERHUB_USER
+  before_script:
+    - apk add --no-cache docker-cli-compose git
+    - docker info
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin docker.io
+  script:
+    - git fetch origin main
+    - git merge-base --is-ancestor $CI_COMMIT_SHA origin/main || { echo "Tag is not on main, aborting..."; exit 1; }
+    - export VERSION="$CI_COMMIT_TAG"
+    - export COMMIT="$CI_COMMIT_SHORT_SHA"
+    - export BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    - echo "Building compose stack version $VERSION (commit=$COMMIT)"
+    - docker compose build
+    - docker compose push
+    - docker tag "$REGISTRY_IMAGE/flick-api:$VERSION" "$REGISTRY_IMAGE/flick-api:latest" # Re-tag the API
+    - docker tag "$REGISTRY_IMAGE/flick-web:$VERSION" "$REGISTRY_IMAGE/flick-web:latest" # Re-tag the Web
+    - docker push "$REGISTRY_IMAGE/flick-api:latest"
+    - docker push "$REGISTRY_IMAGE/flick-web:latest"
+
+# Mirror Job
 mirror-job:
   stage: mirror
   needs: [build-job]
