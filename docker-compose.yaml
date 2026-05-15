@@ -3,6 +3,7 @@
 services:
   # API Service
   flick-api:
+    platform: linux/amd64
     image: dellixou/flick-api:${VERSION:-latest}
     build:
       context: ./
@@ -22,6 +23,7 @@ services:
 
   # Web Service
   flick-web:
+    platform: linux/amd64
     image: dellixou/flick-web:${VERSION:-latest}
     build:
       context: ./web/
