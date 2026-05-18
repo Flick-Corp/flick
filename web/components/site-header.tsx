@@ -1,12 +1,19 @@
-import { ArrowDownLeft, ArrowUpRight } from "lucide-react"
+"use client"
+
+import { ArrowDownLeft, ArrowUpRight, LayoutDashboard } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
-import { Link } from "@/i18n/navigation"
+import { Link, usePathname } from "@/i18n/navigation"
 
 export default function SiteHeader() {
   const t = useTranslations("Header")
+  const pathname = usePathname()
+
+  if (pathname.startsWith("/dashboard")) {
+    return null
+  }
 
   return (
     <header className="border-b">
@@ -19,6 +26,12 @@ export default function SiteHeader() {
         </Link>
 
         <nav className="flex items-center gap-4">
+          <Button asChild variant="ghost">
+            <Link href="/dashboard">
+              <LayoutDashboard className="h-4 w-4" />
+              {t("dashboard")}
+            </Link>
+          </Button>
           <Button asChild>
             <Link href="/send">
               <ArrowUpRight className="h-4 w-4" />

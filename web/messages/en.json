@@ -1,8 +1,92 @@
 {
+  "Settings": {
+    "title": "Settings",
+    "subtitle": "General configuration of the application.",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "saveError": "Could not save configuration. Please retry.",
+    "loadError": "Could not load current configuration. Defaults shown.",
+    "loadErrorTitle": "Cannot load configuration",
+    "loadErrorDescription": "The server did not return the current settings. Check that the API is reachable, then retry.",
+    "retry": "Retry",
+    "loading": "Loading configuration...",
+    "savedAt": "Saved at {time}",
+    "notAvailable": "Not available",
+    "sections": {
+      "storage": {
+        "title": "Storage",
+        "description": "Persistence and storage behavior."
+      },
+      "uploads": {
+        "title": "Uploads",
+        "description": "Limits and defaults for file transfers."
+      },
+      "security": {
+        "title": "Security",
+        "description": "Authentication and protection options."
+      },
+      "antiAbuse": {
+        "title": "Anti-Abuse",
+        "description": "Rate limiting and abuse protection."
+      }
+    },
+    "fields": {
+      "persistence": {
+        "label": "Enable persistence",
+        "description": "If disabled, files are sent using a STUN/TURN server and are not stored on the server. This means they can only be downloaded while the sender is online."
+      },
+      "maxFileSizeMb": {
+        "label": "Max file size (MB)"
+      },
+      "defaultExpiration": {
+        "label": "Default expiration (e.g. 15m, 24h)",
+        "description": "Default lifetime for shared files. Users can change their own default."
+      },
+      "maxExpiration": {
+        "label": "Max expiration (e.g. 24h, 7d)"
+      },
+      "allowMultipleDownloads": {
+        "label": "Allow multiple downloads per file",
+        "description": "If disabled, each file can only be downloaded once."
+      },
+      "defaultDownloadCount": {
+        "label": "Default download count limit",
+        "description": "Default number of downloads allowed per file. Users can change their own default."
+      },
+      "maxDownloadCount": {
+        "label": "Max download count limit (0 for unlimited)"
+      },
+      "requirePassword": {
+        "label": "Require password by default",
+        "description": "Force users to set a password on every transfer."
+      },
+      "activateRateLimit": {
+        "label": "Enable rate limiting",
+        "description": "Apply per-hour caps on key generation and uploads."
+      },
+      "maxGenerationKeyPerHour": {
+        "label": "Max key generations per hour per IP",
+        "description": "A key is a partial identifier used to recognize a client and apply per-client limits. This caps how many new keys a single IP can request per hour, to prevent a client from rotating keys to bypass per-key limits."
+      },
+      "maxUploadPerHourPerKey": {
+        "label": "Max uploads per hour per key",
+        "description": "Maximum number of uploads allowed per hour for a single client key. The main per-client rate limit."
+      },
+      "maxUploadPerHourPerIP": {
+        "label": "Max uploads per hour per IP",
+        "description": "Maximum number of uploads allowed per hour from a single IP address. A second line of defense if a client tries to rotate keys."
+      },
+      "maxUploadPerHour": {
+        "label": "Max uploads per hour (global)",
+        "description": "Global cap across the whole instance. Protects the server from overload regardless of clients."
+      }
+    }
+  },
   "Header": {
     "login": "Sign in",
     "send": "Send a file",
-    "receive": "Receive with a code"
+    "receive": "Receive with a code",
+    "dashboard": "Dashboard"
   },
   "Hero": {
     "badge": "Frictionless file transfer",
