@@ -7,6 +7,10 @@ function getApiBase(): string {
   return `https://localhost:${API_PORT}`
 }
 
+export function getConfigureUrl(): string {
+  return new URL("/configure", getApiBase()).toString()
+}
+
 export class CodeNotFoundError extends Error {
   constructor(public code: string) {
     super(`Code not found: ${code}`)
@@ -91,6 +95,40 @@ export async function downloadByCode(code: string, signal?: AbortSignal): Promis
   }
 
   return files
+}
+
+export async function loadConfiguration(
+  signal?: AbortSignal
+): Promise<Record<string, string | number | boolean>> {
+  const url = new URL("/configure", getApiBase())
+
+  const res = await fetch(url.toString(), { method: "GET", signal })
+  if (!res.ok) {
+    throw new ApiError(res.status, await res.text().catch(() => res.statusText))
+  }
+
+  const data = (await res.json()) as unknown
+  if (data === null || typeof data !== "object") {
+    throw new ApiError(res.status, "Invalid configuration response")
+  }
+  return data as Record<string, string | number | boolean>
+}
+
+export async function saveConfiguration(
+  values: Record<string, string | number | boolean>,
+  signal?: AbortSignal
+): Promise<void> {
+  const url = new URL("/configure", getApiBase())
+
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(values),
+    signal,
+  })
+  if (!res.ok) {
+    throw new ApiError(res.status, await res.text().catch(() => res.statusText))
+  }
 }
 
 export function triggerBlobDownload(blob: Blob, filename: string): void {

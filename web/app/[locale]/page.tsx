@@ -1,6 +1,7 @@
 import { ArrowDownLeft, ArrowRight, ArrowUpRight, Clock, KeyRound, Upload, Zap } from "lucide-react"
 import { useTranslations } from "next-intl"
 
+import { MouseMist } from "@/components/mouse-mist"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Link } from "@/i18n/navigation"
@@ -24,7 +25,8 @@ export default function Page() {
   ]
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-20">
+    <main className="relative mx-auto max-w-6xl px-6 py-20">
+      <MouseMist />
       <section className="flex flex-col items-center text-center">
         <h1 className="text-5xl tracking-tight md:text-6xl">
           {tHero("titleStart")} <span className="font-bold text-primary">{tHero("titleHighlight")}</span>
