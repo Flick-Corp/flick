@@ -3,13 +3,21 @@
 import { Check, ChevronLeft, Copy, ExternalLink } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useSearchParams } from "next/navigation"
-import { useState } from "react"
+import { Suspense, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Link } from "@/i18n/navigation"
 
 export default function SendSuccessPage() {
+  return (
+    <Suspense fallback={null}>
+      <SendSuccessContent />
+    </Suspense>
+  )
+}
+
+function SendSuccessContent() {
   const t = useTranslations("SendSuccess")
   const searchParams = useSearchParams()
   const codes = searchParams.getAll("code").filter(Boolean)
