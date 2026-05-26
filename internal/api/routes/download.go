@@ -25,20 +25,19 @@ import (
 //
 // Params:
 // - code (string): The code to update.
-// - logger (logging.Logger): The logger.
-func onDownloadFinished(code string, logger logging.Logger) {
+func onDownloadFinished(code string) {
 	metadataPath := path.GetDataDir() + "/" + code + "/"
 	metadataFile, err := os.Open(metadataPath + "." + code + "-metadata.json")
 	if err != nil {
-		logger.InfoError("Error while reading the metadata.json file during a download finished action.")
+		logging.LogInfoError("Cannot open metadata file for code %q: %v", code, err)
+		return
 	}
 	defer metadataFile.Close()
 
 	var meta metadata.Metadata
-	err = json.NewDecoder(metadataFile).Decode(&meta)
-
-	if err != nil {
-		logger.InfoError("Error while reading the metadata.json file during a download finished action.")
+	if err := json.NewDecoder(metadataFile).Decode(&meta); err != nil {
+		logging.LogInfoError("Cannot decode metadata file for code %q: %v", code, err)
+		return
 	}
 
 	// WARN: Should we use something to prevent race condition here? Maybe in future.
@@ -47,7 +46,7 @@ func onDownloadFinished(code string, logger logging.Logger) {
 		return
 	}
 	meta.CurrentDownloadCount += 1
-	metadata.CreateMetadataFile(meta, metadataPath, code, logger)
+	metadata.CreateMetadataFile(meta, metadataPath, code)
 
 }
 
@@ -57,25 +56,26 @@ func onDownloadFinished(code string, logger logging.Logger) {
 // - writer (*multipart.Writer): The writer of the multipart.
 // - entries ([]os.DirEntry): The different entries of the directory.
 // - path (string): The path.
-// - logger (logging.Logger): The logger.
-func doDownloadMultipartForm(writer *multipart.Writer, entries []os.DirEntry, path string, logger logging.Logger) {
+func doDownloadMultipartForm(writer *multipart.Writer, entries []os.DirEntry, path string) {
 	for _, entry := range entries {
 		fullPath := path + "/" + entry.Name()
 		file, err := os.Open(fullPath)
 
 		if err != nil {
-			logger.InfoError("Cannot open file %s", entry.Name())
+			logging.LogInfoError("Cannot open file %q: %v", entry.Name(), err)
 			continue
 		}
 
 		info, err := file.Stat()
 		if err != nil {
+			logging.LogInfoError("Cannot stat file %q: %v", entry.Name(), err)
 			file.Close()
 			continue
 		}
 
 		part, err := writer.CreateFormFile("file", entry.Name())
 		if err != nil {
+			logging.LogInfoError("Cannot create multipart part for file %q: %v", entry.Name(), err)
 			file.Close()
 			continue
 		}
@@ -84,20 +84,18 @@ func doDownloadMultipartForm(writer *multipart.Writer, entries []os.DirEntry, pa
 		file.Close()
 
 		if err != nil {
+			logging.LogInfoError("Cannot send file %q: %v", entry.Name(), err)
 			continue
 		}
-		logger.InfoSuccess("Sent file <%s> (%d bytes)", entry.Name(), info.Size())
+		logging.LogInfoSuccess("Sent file %q (%d bytes)", entry.Name(), info.Size())
 	}
 }
 
 // DownloadFileHandler: Build the download file handler.
 //
-// Params:
-// - logger (logging.Logger): The logger to use.
-//
 // Returns:
 // - http.HandlerFunc: The handler function.
-func DownloadFileHandler(logger logging.Logger) http.HandlerFunc {
+func DownloadFileHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "GET only", http.StatusMethodNotAllowed)
@@ -114,7 +112,7 @@ func DownloadFileHandler(logger logging.Logger) http.HandlerFunc {
 
 		entries, err := os.ReadDir(codePath)
 		if err != nil {
-			logger.InfoError("The code <%s> doesn't exist.", code)
+			logging.LogInfoError("Code %q does not exist", code)
 			http.Error(w, "Code not found", http.StatusNotFound)
 			return
 		}
@@ -131,7 +129,7 @@ func DownloadFileHandler(logger logging.Logger) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", writer.FormDataContentType())
 		w.Header().Set("X-Total-Size", strconv.FormatInt(totalSize, 10))
-		doDownloadMultipartForm(writer, entries, codePath, logger)
-		onDownloadFinished(code, logger)
+		doDownloadMultipartForm(writer, entries, codePath)
+		onDownloadFinished(code)
 	}
 }

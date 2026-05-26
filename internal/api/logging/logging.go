@@ -13,24 +13,35 @@ import (
 	"time"
 )
 
-// Logger structure
-type Logger struct {
-	Prefix string
+// printLogLabel: Print a label in this format <date> [<title>] <subtitle> > .
+//
+// Params:
+// - title (string): The title.
+// - titleColor (string): The title color.
+// - subtitle (string): The subtitle title.
+// - subtitleColor (string): The subtitle title color.
+func printLogLabel(title string, titleColor string, subtitle string, subtitleColor string) {
+	now := time.Now().Format("15:04:05")
+
+	fmt.Printf(utils.Dim+"%s"+utils.Reset+" "+
+		utils.Gray+"["+utils.Reset+titleColor+utils.Bold+"%s"+utils.Reset+utils.Gray+"]"+utils.Reset+" "+
+		subtitleColor+utils.Bold+"%s"+utils.Reset+utils.Gray+" > "+utils.Reset,
+		now, title, subtitle)
 }
 
-// InfoSuccess: Print a success log message.
+// LogInfoSuccess: Print a success log message.
 //
 // Params:
 // - format (string): The format string (printf style).
 // - args (...any): The arguments for formatting.
-func (l Logger) InfoSuccess(format string, args ...any) {
-	now := time.Now().Format("15:04:05")
+func LogInfoSuccess(format string, args ...any) {
 	msg := fmt.Sprintf(format, args...)
 
-	fmt.Printf("[%s] "+utils.Green+"[%s] %s\n"+utils.Reset, now, l.Prefix, msg)
+	printLogLabel("SUCCESS", utils.BrightGreen, "INFO", utils.BrightWhite)
+	fmt.Printf("%s\n", msg)
 }
 
-// InfoError: Print an error log message.
+// LogInfoError: Print an error log message.
 //
 // Params:
 // - format (string): The format string (printf style).
@@ -38,22 +49,22 @@ func (l Logger) InfoSuccess(format string, args ...any) {
 //
 // Returns:
 // - error: The formatted error.
-func (l Logger) InfoError(format string, args ...any) error {
-	now := time.Now().Format("15:04:05")
+func LogInfoError(format string, args ...any) error {
 	msg := fmt.Sprintf(format, args...)
 
-	fmt.Printf("[%s] "+utils.Red+"[%s] %s\n"+utils.Reset, now, l.Prefix, msg)
-	return fmt.Errorf("%s: %s", l.Prefix, msg)
+	printLogLabel("ERROR", utils.BrightRed, "INFO", utils.BrightWhite)
+	fmt.Printf("%s\n", msg)
+	return fmt.Errorf("%s", msg)
 }
 
-// Info: Print a log message.
+// LogInfo: Print a log message.
 //
 // Params:
 // - format (string): The format string (printf style).
 // - args (...any): The arguments for formatting.
-func (l Logger) Info(format string, args ...any) {
-	now := time.Now().Format("15:04:05")
+func LogInfo(format string, args ...any) {
 	msg := fmt.Sprintf(format, args...)
 
-	fmt.Printf("[%s] [%s] %s\n", now, l.Prefix, msg)
+	printLogLabel("INFO", utils.BrightBlue, "INFO", utils.BrightWhite)
+	fmt.Printf("%s\n", msg)
 }

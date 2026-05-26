@@ -21,13 +21,10 @@ import (
 )
 
 // WriteDefaultConfig: Writes the default server configuration.
-//
-// Params:
-// - logger (logging.Logger): The logger.
-func WriteDefaultConfig(logger logging.Logger) {
+func WriteDefaultConfig() {
 	dir := path.GetFlickDir()
 	if _, err := os.Stat(filepath.Join(dir, "server-config.json")); err == nil {
-		logger.Info("Server configuration file already exists")
+		logging.LogInfo("Server configuration file already exists")
 		return
 	}
 	data, _ := json.MarshalIndent(serverconfig.Conf, "", "")
@@ -37,12 +34,9 @@ func WriteDefaultConfig(logger logging.Logger) {
 // SendServerConfig: Sends the server config to the web if GET,
 // if POST modifies the server config.
 //
-// Params:
-// - logger (logging.Logger): The logger.
-//
 // Returns:
 // - http.HandlerFunc
-func SendServerConfig(logger logging.Logger) http.HandlerFunc {
+func SendServerConfig() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dir := path.GetFlickDir()
 
