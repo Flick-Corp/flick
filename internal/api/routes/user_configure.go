@@ -13,7 +13,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/matteoepitech/flick/internal/api/logging"
 	"github.com/matteoepitech/flick/internal/api/path"
 	"github.com/matteoepitech/flick/internal/api/serverconfig"
 )
@@ -21,12 +20,9 @@ import (
 // SendServerUserConfig: Sends the user-facing server config to the web by a GET.
 // Only the fields tagged with `user:"true"` are returned.
 //
-// Params:
-// - logger (logging.Logger): The logger.
-//
 // Returns:
 // - http.HandlerFunc
-func SendServerUserConfig(logger logging.Logger) http.HandlerFunc {
+func SendServerUserConfig() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dir := path.GetFlickDir()
 

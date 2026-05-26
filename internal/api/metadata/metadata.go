@@ -32,15 +32,21 @@ type Metadata struct {
 // - metadata (Metadata): The metadata informations.
 // - filepath (string): The filepath to the metadata location.
 // - code (string): The generated share code.
-// - logger (logging.Logger): The logger.
-func CreateMetadataFile(metadata Metadata, filepath string, code string, logger logging.Logger) {
+func CreateMetadataFile(metadata Metadata, filepath string, code string) {
+	metadataPath := filepath + "." + code + "-metadata.json"
+
 	data, err := json.Marshal(metadata)
 	if err != nil {
-		logger.InfoError("Failed to create metadata")
+		logging.LogInfoError("Cannot marshal metadata for code %q: %v", code, err)
+		return
 	}
 
-	logger.InfoSuccess("Successfully created %s", filepath+"."+code+"-metadata.json")
-	os.WriteFile(filepath+"."+code+"-metadata.json", data, 0644)
+	if err := os.WriteFile(metadataPath, data, 0644); err != nil {
+		logging.LogInfoError("Cannot write metadata file %q: %v", metadataPath, err)
+		return
+	}
+
+	logging.LogInfoSuccess("Created metadata file %q", metadataPath)
 }
 
 // SetExpiration: Defines the expiration date based on the received pattern.
@@ -48,28 +54,27 @@ func CreateMetadataFile(metadata Metadata, filepath string, code string, logger 
 // Params:
 // - metadata (*Metadata): The metadata to set the expiration.
 // - exp (string): The duration of the expiration.
-// - logger (logging.Logger): The logger.
 //
 // Returns:
 // - result1 (bool): Return true if the metadata has been changed, else false.
-func SetExpiration(metadata *Metadata, exp string, logger logging.Logger) bool {
+func SetExpiration(metadata *Metadata, exp string) bool {
 	duration, err := utils.ParseExpirationTime(exp)
 
 	if err != nil {
-		logger.InfoError("Failed to parse expiration time")
+		logging.LogInfoError("Cannot parse expiration time %q: %v", exp, err)
 		return false
 	}
 
-	if !duration.After(time.Now()) {
-		logger.InfoError("Expiration time is before now, cannot set the expiration time")
-		return false
-	}
-	if !checkConfigTime(duration, logger) {
-		logger.InfoError("Expiration time higher than maximum defined in configuration (%q)", duration)
-		return false
-	}
 	if duration.IsZero() {
-		logger.InfoError("Expiration time is zero, cannot set the expiration time")
+		logging.LogInfoError("Expiration time %q cannot be zero", exp)
+		return false
+	}
+	if !duration.After(time.Now()) {
+		logging.LogInfoError("Expiration time %q is in the past", exp)
+		return false
+	}
+	if !checkConfigTime(duration) {
+		logging.LogInfoError("Expiration time %q exceeds the maximum allowed by configuration", exp)
 		return false
 	}
 	metadata.Expiration = duration.Format(time.RFC3339)
@@ -81,19 +86,18 @@ func SetExpiration(metadata *Metadata, exp string, logger logging.Logger) bool {
 // Params:
 // - metadata (*Metadata): The metadata to modify.
 // - maxDownloadCount (string): The max download count string.
-// - logger (logging.Logger): The logger.
 //
 // Returns:
 // - result1 (bool): Return true if the metadata has been changed, else false.
-func SetMaxDownloadCount(metadata *Metadata, maxDownloadCount string, logger logging.Logger) bool {
+func SetMaxDownloadCount(metadata *Metadata, maxDownloadCount string) bool {
 	mdc, err := strconv.Atoi(maxDownloadCount)
 	if err != nil {
-		logger.InfoError("Failed to parse the max download count value for metadata (%q)", maxDownloadCount)
+		logging.LogInfoError("Cannot parse max download count %q: %v", maxDownloadCount, err)
 		return false
 	}
 
 	if mdc > serverconfig.Conf.MaxDownloadCount {
-		logger.InfoError("Max download count is higher than maximum defined in configuration (%q)", maxDownloadCount)
+		logging.LogInfoError("Max download count %q exceeds the maximum allowed by configuration (%d)", maxDownloadCount, serverconfig.Conf.MaxDownloadCount)
 		return false
 	}
 
@@ -146,14 +150,13 @@ func CheckExpirationToRemove(dataDir string) error {
 //
 // Params:
 // - duration (time.Time): The duration passed by the user.
-// - logger (logging.Logger): The logger.
 //
 // Returns:
 // - result1 (bool): True if in config bounds, else false.
-func checkConfigTime(duration time.Time, logger logging.Logger) bool {
+func checkConfigTime(duration time.Time) bool {
 	maxExp, err := utils.ParseExpirationTime(serverconfig.Conf.MaxExpiration)
 	if err != nil {
-		logger.InfoError("Failed to parse max expiration time in configuration")
+		logging.LogInfoError("Cannot parse max expiration time %q from configuration: %v", serverconfig.Conf.MaxExpiration, err)
 		return false
 	}
 

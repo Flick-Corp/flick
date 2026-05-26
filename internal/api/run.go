@@ -51,11 +51,6 @@ func withCORS(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Logging for the API
-var logger logging.Logger = logging.Logger{
-	Prefix: "API",
-}
-
 // Run: Run the API on HTTP/3 (QUIC).
 //
 // Params:
@@ -65,15 +60,15 @@ var logger logging.Logger = logging.Logger{
 // - result1 (error): nil if no error, otherwise an error.
 func Run(ctx context.Context) error {
 	if err := os.MkdirAll(path.GetDataDir(), 0755); err != nil {
-		return logger.InfoError("Unable to start the API, cannot create the directory %s", path.GetDataDir())
+		return logging.LogInfoError("Cannot create data directory %q: %v", path.GetDataDir(), err)
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/upload", withCORS(routes.UploadFileHandler(logger)))
-	mux.HandleFunc("/download", withCORS(routes.DownloadFileHandler(logger)))
-	mux.HandleFunc("/configure", withCORS(routes.SendServerConfig(logger)))
-	mux.HandleFunc("/user-configure", withCORS(routes.SendServerUserConfig(logger)))
-	routes.WriteDefaultConfig(logger)
+	mux.HandleFunc("/upload", withCORS(routes.UploadFileHandler()))
+	mux.HandleFunc("/download", withCORS(routes.DownloadFileHandler()))
+	mux.HandleFunc("/configure", withCORS(routes.SendServerConfig()))
+	mux.HandleFunc("/user-configure", withCORS(routes.SendServerUserConfig()))
+	routes.WriteDefaultConfig()
 
 	h3Server := &http3.Server{
 		Addr:    addr,
@@ -82,7 +77,7 @@ func Run(ctx context.Context) error {
 
 	h2Handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := h3Server.SetQUICHeaders(w.Header()); err != nil {
-			logger.InfoError("Cannot set QUIC headers: %s", err.Error())
+			logging.LogInfoError("Cannot set QUIC headers: %v", err)
 		}
 		mux.ServeHTTP(w, r)
 	})
@@ -94,22 +89,22 @@ func Run(ctx context.Context) error {
 
 	// Init the code cache from disk into RAM.
 	if err := code.InitCodeCache(); err != nil {
-		logger.InfoError("Cannot load code cache from disk: %s", err.Error())
+		logging.LogInfoError("Cannot load code cache from disk: %v", err)
 	}
 
-	logger.InfoSuccess("Starting FLICK server on port 15702...")
+	logging.LogInfoSuccess("FLICK server listening on %s", addr)
 
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		if err := h3Server.ListenAndServeTLS(certFile, keyFile); err != nil {
-			logger.InfoError("HTTP/3 server stopped: %s", err.Error())
+			logging.LogInfoError("HTTP/3 server stopped: %v", err)
 		}
 	}()
 	go func() {
 		if err := h2Server.ListenAndServeTLS(certFile, keyFile); err != nil {
-			logger.InfoError("HTTP/2 server stopped: %s", err.Error())
+			logging.LogInfoError("HTTP/2 server stopped: %v", err)
 		}
 	}()
 	<-stopSignal

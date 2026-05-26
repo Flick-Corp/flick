@@ -20,12 +20,9 @@ import (
 
 // UploadFileHandler: Build the upload file handler.
 //
-// Params:
-// - logger (logging.Logger): The logger to use.
-//
 // Returns:
 // - http.HandlerFunc: The handler function.
-func UploadFileHandler(logger logging.Logger) http.HandlerFunc {
+func UploadFileHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "This endpoint is meant to be POST only", http.StatusNotFound)
@@ -36,7 +33,7 @@ func UploadFileHandler(logger logging.Logger) http.HandlerFunc {
 
 		file, header, err := r.FormFile("file")
 		if err != nil {
-			logger.InfoError("Error while parsing an uploaded file")
+			logging.LogInfoError("Cannot parse uploaded file: %v", err)
 			http.Error(w, "Cannot parse the file", http.StatusBadRequest)
 			return
 		}
@@ -44,13 +41,14 @@ func UploadFileHandler(logger logging.Logger) http.HandlerFunc {
 
 		m := new(metadata.Metadata)
 
-		if !metadata.SetExpiration(m, r.URL.Query().Get("expiration"), logger) {
-			logger.InfoError("Error in expiration time")
+		// SetExpiration / SetMaxDownloadCount log the precise reason themselves.
+		if !metadata.SetExpiration(m, r.URL.Query().Get("expiration")) {
+			http.Error(w, "Invalid expiration time", http.StatusBadRequest)
 			return
 		}
 
-		if !metadata.SetMaxDownloadCount(m, r.URL.Query().Get("maxDownloadCount"), logger) {
-			logger.InfoError("Error in max download count")
+		if !metadata.SetMaxDownloadCount(m, r.URL.Query().Get("maxDownloadCount")) {
+			http.Error(w, "Invalid max download count", http.StatusBadRequest)
 			return
 		}
 
@@ -67,11 +65,11 @@ func UploadFileHandler(logger logging.Logger) http.HandlerFunc {
 		}
 
 		os.MkdirAll(path.GetDataDir()+codeDir, 0755)
-		metadata.CreateMetadataFile(*m, path.GetDataDir()+codeDir+"/", codeDir, logger)
+		metadata.CreateMetadataFile(*m, path.GetDataDir()+codeDir+"/", codeDir)
 
 		dst, err := os.Create(path.GetDataDir() + codeDir + "/" + header.Filename)
 		if err != nil {
-			logger.InfoError("Error while uploading a file of code <%s>", header.Filename)
+			logging.LogInfoError("Cannot create destination file %q for code %q: %v", header.Filename, codeDir, err)
 			http.Error(w, "Cannot save the file", http.StatusInternalServerError)
 			return
 		}
@@ -79,11 +77,11 @@ func UploadFileHandler(logger logging.Logger) http.HandlerFunc {
 
 		fileBytes, err := io.Copy(dst, file)
 		if err != nil {
-			logger.InfoError("Error while uploading a file of code <%s>", header.Filename)
+			logging.LogInfoError("Cannot write uploaded file %q for code %q: %v", header.Filename, codeDir, err)
 			http.Error(w, "Error while copying the file", http.StatusInternalServerError)
 			return
 		}
-		logger.InfoSuccess("Received a file with code <%s> (%d bytes)", codeDir, fileBytes)
+		logging.LogInfoSuccess("Received file %q with code %q (%d bytes)", header.Filename, codeDir, fileBytes)
 		fmt.Fprintf(w, "%s", codeDir)
 	}
 }
