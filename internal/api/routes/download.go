@@ -15,10 +15,10 @@ import (
 	"os"
 	"strconv"
 
+	codepkg "github.com/matteoepitech/flick/internal/api/code"
 	"github.com/matteoepitech/flick/internal/api/logging"
 	"github.com/matteoepitech/flick/internal/api/metadata"
 	"github.com/matteoepitech/flick/internal/api/path"
-	"github.com/matteoepitech/flick/internal/api/utils/data"
 )
 
 // onDownloadFinished: When a download is done we do this.
@@ -42,12 +42,13 @@ func onDownloadFinished(code string) {
 
 	// WARN: Should we use something to prevent race condition here? Maybe in future.
 	if meta.CurrentDownloadCount+1 >= meta.MaxDownloadCount && meta.MaxDownloadCount != 0 {
-		data.DeleteDataDirWithCode(code)
+		if err := codepkg.DeleteCode(code); err != nil {
+			logging.LogInfoError("Failed to delete code \"%s\": %v", code, err)
+		}
 		return
 	}
 	meta.CurrentDownloadCount += 1
 	metadata.CreateMetadataFile(meta, metadataPath, code)
-
 }
 
 // doDownloadMultipartForm: Do the download request.
@@ -129,7 +130,9 @@ func DownloadFileHandler() http.HandlerFunc {
 
 		w.Header().Set("Content-Type", writer.FormDataContentType())
 		w.Header().Set("X-Total-Size", strconv.FormatInt(totalSize, 10))
+
 		doDownloadMultipartForm(writer, entries, codePath)
 		onDownloadFinished(code)
+		IncDownloads()
 	}
 }

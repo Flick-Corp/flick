@@ -14,15 +14,14 @@ import (
 	"github.com/matteoepitech/flick/internal/api/path"
 )
 
-// DeleteDataDirWithCode: Delete a directory of data using his code.
+// DeleteDataDirWithCode: Delete the data directory of a code from disk.
 //
 // Params:
 // - code (string): The code to delete.
-func DeleteDataDirWithCode(code string) {
+//
+// Returns:
+// - result1 (error): Error if removing the data directory fails.
+func DeleteDataDirWithCode(code string) error {
 	dataDir := filepath.Join(path.GetDataDir(), code)
-	subdir, _ := os.ReadDir(dataDir)
-	for _, files := range subdir {
-		os.Remove(dataDir + files.Name())
-	}
-	os.Remove(dataDir)
+	return os.RemoveAll(dataDir)
 }

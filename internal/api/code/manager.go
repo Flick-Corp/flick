@@ -13,6 +13,7 @@ import (
 
 	"github.com/matteoepitech/flick/internal/api/metadata"
 	"github.com/matteoepitech/flick/internal/api/path"
+	"github.com/matteoepitech/flick/internal/api/utils/data"
 	"github.com/patrickmn/go-cache"
 )
 
@@ -72,6 +73,24 @@ func LoadCacheManagerFile(path string) error {
 	if _, err := os.Stat(path); err == nil {
 		return Cache.LoadFile(path)
 	}
+	return nil
+}
+
+// DeleteCode: Evict a code from the cache, remove its data directory,
+// and refresh metadata expirations.
+//
+// Params:
+// - code (string): The code to delete.
+//
+// Returns:
+// - result1 (error): Error if removing the data directory fails.
+func DeleteCode(code string) error {
+	Cache.Delete(code)
+	if err := data.DeleteDataDirWithCode(code); err != nil {
+		return err
+	}
+	_ = SaveCacheManagerFile(path.GetCacheFile())
+	metadata.CheckExpirationToRemove(path.GetDataDir())
 	return nil
 }
 

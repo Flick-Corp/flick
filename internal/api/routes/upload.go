@@ -83,5 +83,6 @@ func UploadFileHandler() http.HandlerFunc {
 		}
 		logging.LogInfoSuccess("Received file %q with code %q (%d bytes)", header.Filename, codeDir, fileBytes)
 		fmt.Fprintf(w, "%s", codeDir)
+		IncUploads()
 	}
 }
