@@ -131,6 +131,36 @@ export async function saveConfiguration(
   }
 }
 
+export interface StatsSnapshot {
+  timestamp: string
+  activeCodes: number
+  totalUploads: number
+  totalDownloads: number
+}
+
+export async function fetchStats(signal?: AbortSignal): Promise<StatsSnapshot> {
+  const url = new URL("/stats", getApiBase())
+
+  const res = await fetch(url.toString(), { method: "GET", signal })
+  if (!res.ok) {
+    throw new ApiError(res.status, await res.text().catch(() => res.statusText))
+  }
+
+  const data = (await res.json()) as unknown
+  if (data === null || typeof data !== "object") {
+    throw new ApiError(res.status, "Invalid stats response")
+  }
+
+  const obj = data as Record<string, unknown>
+  const activeCodes = typeof obj.activeCodes === "number" ? obj.activeCodes : 0
+  const totalUploads = typeof obj.totalUploads === "number" ? obj.totalUploads : 0
+  const totalDownloads = typeof obj.totalDownloads === "number" ? obj.totalDownloads : 0
+  const timestamp =
+    typeof obj.timestamp === "string" ? obj.timestamp : new Date().toISOString()
+
+  return { timestamp, activeCodes, totalUploads, totalDownloads }
+}
+
 export function triggerBlobDownload(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")

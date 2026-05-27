@@ -1,9 +1,69 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart"
+import { fetchStats, type StatsSnapshot } from "@/lib/api"
+
+type Point = { time: string; activeCodes: number }
+
+const MAX_POINTS = 60
+const POLL_INTERVAL_MS = 5000
+
+const chartConfig = {
+  activeCodes: {
+    label: "Active codes",
+    color: "var(--primary)",
+  },
+} satisfies ChartConfig
 
 export default function DashboardPage() {
-  const stats = [
-    { label: "Total transfers", value: "—" },
-    { label: "Active links", value: "—" },
+  const [points, setPoints] = useState<Point[]>([])
+  const [latest, setLatest] = useState<StatsSnapshot | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    let cancelled = false
+
+    const tick = async () => {
+      try {
+        const snap = await fetchStats(controller.signal)
+        if (cancelled) return
+        setLatest(snap)
+        setPoints((prev) => [
+          ...prev.slice(-(MAX_POINTS - 1)),
+          {
+            time: new Date(snap.timestamp).toLocaleTimeString(),
+            activeCodes: snap.activeCodes,
+          },
+        ])
+      } catch {
+        /* ignore transient errors */
+      }
+    }
+
+    tick()
+    const id = setInterval(tick, POLL_INTERVAL_MS)
+    return () => {
+      cancelled = true
+      controller.abort()
+      clearInterval(id)
+    }
+  }, [])
+
+  const current = points.at(-1)?.activeCodes ?? 0
+
+  const summary = [
+    { label: "Total uploads", value: latest ? String(latest.totalUploads) : "—" },
+    { label: "Total downloads", value: latest ? String(latest.totalDownloads) : "—" },
+    { label: "Active links", value: String(current) },
     { label: "Storage used", value: "—" },
     { label: "Users", value: "—" },
   ]
@@ -16,7 +76,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((s) => (
+        {summary.map((s) => (
           <Card key={s.label}>
             <CardHeader className="pb-2">
               <CardDescription>{s.label}</CardDescription>
@@ -28,6 +88,29 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Active codes: {current}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={chartConfig} className="h-64 w-full">
+            <LineChart data={points} margin={{ left: 12, right: 12 }}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="time" tickLine={false} axisLine={false} minTickGap={32} />
+              <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Line
+                dataKey="activeCodes"
+                type="monotone"
+                stroke="var(--color-activeCodes)"
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
     </div>
   )
 }

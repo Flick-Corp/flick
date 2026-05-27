@@ -67,6 +67,7 @@ func Run(ctx context.Context) error {
 	mux.HandleFunc("/upload", withCORS(routes.UploadFileHandler()))
 	mux.HandleFunc("/download", withCORS(routes.DownloadFileHandler()))
 	mux.HandleFunc("/configure", withCORS(routes.SendServerConfig()))
+	mux.HandleFunc("/stats", withCORS(routes.SendStats()))
 	mux.HandleFunc("/user-configure", withCORS(routes.SendServerUserConfig()))
 	routes.WriteDefaultConfig()
 
