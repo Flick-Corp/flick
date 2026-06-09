@@ -43,15 +43,14 @@ func doUploadRequest(req *http.Request) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		return fmt.Errorf("Failure: Server returned %s", resp.Status)
-	}
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("Failure: Invalid response from the server")
 	}
-	defer resp.Body.Close()
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("Failure: %s", serverErrorMessage(body, resp.Status))
+	}
 
 	bodyString := string(body)
 	fmt.Print("\nCode: " + bodyString + "\n")

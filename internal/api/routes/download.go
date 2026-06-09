@@ -99,13 +99,13 @@ func doDownloadMultipartForm(writer *multipart.Writer, entries []os.DirEntry, pa
 func DownloadFileHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			http.Error(w, "GET only", http.StatusMethodNotAllowed)
+			WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
 			return
 		}
 
 		code := r.URL.Query().Get("code")
 		if code == "" {
-			http.Error(w, "Invalid request", http.StatusBadRequest)
+			WriteError(w, http.StatusBadRequest, "Missing code parameter")
 			return
 		}
 
@@ -114,7 +114,7 @@ func DownloadFileHandler() http.HandlerFunc {
 		entries, err := os.ReadDir(codePath)
 		if err != nil {
 			logging.LogInfoError("Code %q does not exist", code)
-			http.Error(w, "Code not found", http.StatusNotFound)
+			WriteError(w, http.StatusNotFound, "Code not found")
 			return
 		}
 

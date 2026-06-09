@@ -25,7 +25,7 @@ import (
 func UploadFileHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			http.Error(w, "This endpoint is meant to be POST only", http.StatusNotFound)
+			WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
 			return
 		}
 
@@ -34,7 +34,7 @@ func UploadFileHandler() http.HandlerFunc {
 		file, header, err := r.FormFile("file")
 		if err != nil {
 			logging.LogInfoError("Cannot parse uploaded file: %v", err)
-			http.Error(w, "Cannot parse the file", http.StatusBadRequest)
+			WriteError(w, http.StatusBadRequest, "Cannot parse the file")
 			return
 		}
 		defer file.Close()
@@ -43,12 +43,12 @@ func UploadFileHandler() http.HandlerFunc {
 
 		// SetExpiration / SetMaxDownloadCount log the precise reason themselves.
 		if !metadata.SetExpiration(m, r.URL.Query().Get("expiration")) {
-			http.Error(w, "Invalid expiration time", http.StatusBadRequest)
+			WriteError(w, http.StatusBadRequest, "Invalid expiration time")
 			return
 		}
 
 		if !metadata.SetMaxDownloadCount(m, r.URL.Query().Get("maxDownloadCount")) {
-			http.Error(w, "Invalid max download count", http.StatusBadRequest)
+			WriteError(w, http.StatusBadRequest, "Invalid max download count")
 			return
 		}
 
@@ -64,13 +64,17 @@ func UploadFileHandler() http.HandlerFunc {
 			break
 		}
 
-		os.MkdirAll(path.GetDataDir()+codeDir, 0755)
+		if err := os.MkdirAll(path.GetDataDir()+codeDir, 0755); err != nil {
+			logging.LogInfoError("Cannot create directory for code %q: %v", codeDir, err)
+			WriteError(w, http.StatusInternalServerError, "Cannot save the file")
+			return
+		}
 		metadata.CreateMetadataFile(*m, path.GetDataDir()+codeDir+"/", codeDir)
 
 		dst, err := os.Create(path.GetDataDir() + codeDir + "/" + header.Filename)
 		if err != nil {
 			logging.LogInfoError("Cannot create destination file %q for code %q: %v", header.Filename, codeDir, err)
-			http.Error(w, "Cannot save the file", http.StatusInternalServerError)
+			WriteError(w, http.StatusInternalServerError, "Cannot save the file")
 			return
 		}
 		defer dst.Close()
@@ -78,7 +82,7 @@ func UploadFileHandler() http.HandlerFunc {
 		fileBytes, err := io.Copy(dst, file)
 		if err != nil {
 			logging.LogInfoError("Cannot write uploaded file %q for code %q: %v", header.Filename, codeDir, err)
-			http.Error(w, "Error while copying the file", http.StatusInternalServerError)
+			WriteError(w, http.StatusInternalServerError, "Error while copying the file")
 			return
 		}
 		logging.LogInfoSuccess("Received file %q with code %q (%d bytes)", header.Filename, codeDir, fileBytes)
