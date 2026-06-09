@@ -30,13 +30,13 @@ func SendServerUserConfig() http.HandlerFunc {
 		if r.Method == http.MethodGet {
 			data, err := os.ReadFile(filepath.Join(dir, "server-config.json"))
 			if err != nil {
-				http.Error(w, "Failed to read config", http.StatusInternalServerError)
+				WriteError(w, http.StatusInternalServerError, "Failed to read config")
 				return
 			}
 
 			var conf serverconfig.Configuration
 			if err := json.Unmarshal(data, &conf); err != nil {
-				http.Error(w, "Failed to parse config", http.StatusInternalServerError)
+				WriteError(w, http.StatusInternalServerError, "Failed to parse config")
 				return
 			}
 
@@ -46,6 +46,6 @@ func SendServerUserConfig() http.HandlerFunc {
 			return
 		}
 
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
 	}
 }

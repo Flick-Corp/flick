@@ -23,29 +23,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// createFile: Create the file of a multipartform.
-//
-// Params:
-// - name (string): The name of the file.
-// - data (string): The data of the file.
-//
-// Returns:
-// - result1 (error): An error if something occured.
-func createFile(name string, data string) error {
-	fmt.Printf("Getting the file %s...\n", name)
-
-	file, err := os.Create(name)
-	if err != nil {
-		return err
-	}
-
-	_, err = file.WriteString(data)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // doDownloadRequest: Do the download request on the server.
 //
 // Params:
@@ -66,7 +43,8 @@ func doDownloadRequest(req *http.Request) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		return fmt.Errorf("Failure: Server returned %s", resp.Status)
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Failure: %s", serverErrorMessage(body, resp.Status))
 	}
 
 	totalSizeStr := resp.Header.Get("X-Total-Size")

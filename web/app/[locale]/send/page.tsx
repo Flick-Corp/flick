@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { fetchDownloadCountLimits, uploadFile } from "@/lib/api"
+import { ApiError, fetchDownloadCountLimits, uploadFile } from "@/lib/api"
 import { Link, useRouter } from "@/i18n/navigation"
 import { cn } from "@/lib/utils"
 
@@ -93,7 +93,7 @@ export default function SendPage() {
       router.push(`/send/success?${params.toString()}`)
     } catch (err) {
       console.error(err)
-      setError(t("uploadError"))
+      setError(err instanceof ApiError ? err.message : t("uploadError"))
       setSubmitting(false)
       setProgress(null)
     }
@@ -225,7 +225,7 @@ export default function SendPage() {
                 <Label htmlFor="maxDownloadCount" className="text-sm font-semibold text-foreground">
                   {t("maxDownloadCount")}
                 </Label>
-                <span className="text-sm font-semibold tabular-nums text-primary">{maxDownloadCount}</span>
+                <span className="text-sm font-semibold text-primary tabular-nums">{maxDownloadCount}</span>
               </div>
               <input
                 id="maxDownloadCount"

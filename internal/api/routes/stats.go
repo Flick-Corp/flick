@@ -55,7 +55,7 @@ func Downloads() uint64 {
 func SendStats() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
 			return
 		}
 

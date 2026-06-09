@@ -44,13 +44,13 @@ func SendServerConfig() http.HandlerFunc {
 		if r.Method == http.MethodGet {
 			data, err := os.ReadFile(filepath.Join(dir, "server-config.json"))
 			if err != nil {
-				http.Error(w, "Failed to read config", http.StatusInternalServerError)
+				WriteError(w, http.StatusInternalServerError, "Failed to read config")
 				return
 			}
 
 			var conf serverconfig.Configuration
 			if err := json.Unmarshal(data, &conf); err != nil {
-				http.Error(w, "Failed to parse config", http.StatusInternalServerError)
+				WriteError(w, http.StatusInternalServerError, "Failed to parse config")
 				return
 			}
 
@@ -67,31 +67,32 @@ func SendServerConfig() http.HandlerFunc {
 			decoder := json.NewDecoder(r.Body)
 			decoder.DisallowUnknownFields()
 			if err := decoder.Decode(&newConf); err != nil {
-				http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+				WriteError(w, http.StatusBadRequest, "Invalid JSON: "+err.Error())
 				return
 			}
 
 			if err := serverconfig.Validate(&newConf); err != nil {
-				http.Error(w, "Validation failed: "+err.Error(), http.StatusBadRequest)
+				WriteError(w, http.StatusBadRequest, "Validation failed: "+err.Error())
 				return
 			}
 
 			defaultDur, _ := utils.ParseExpirationTime(newConf.DefaultExpiration)
 			maxDur, _ := utils.ParseExpirationTime(newConf.MaxExpiration)
 			if defaultDur.After(maxDur) {
-				http.Error(w, "default_expiration must be <= max_expiration", http.StatusBadRequest)
+				WriteError(w, http.StatusBadRequest, "default_expiration must be <= max_expiration")
 				return
 			}
 
 			serverconfig.Conf = newConf
 			data, _ := json.MarshalIndent(serverconfig.Conf, "", "  ")
 			if err := os.WriteFile(filepath.Join(dir, "server-config.json"), data, 0644); err != nil {
-				http.Error(w, "Failed to save config", http.StatusInternalServerError)
+				WriteError(w, http.StatusInternalServerError, "Failed to save config")
 				return
 			}
 			fmt.Fprint(w, "OK")
+			return
 		}
 
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
 	}
 }

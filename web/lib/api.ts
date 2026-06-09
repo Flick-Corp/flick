@@ -28,6 +28,19 @@ export class ApiError extends Error {
   }
 }
 
+// parseErrorMessage: Extracts the human-readable message from a server error
+// body. The API returns `{"error": "..."}`; falls back to the raw text.
+function parseErrorMessage(body: string, fallback: string): string {
+  if (!body) return fallback
+  try {
+    const parsed = JSON.parse(body) as { error?: unknown }
+    if (typeof parsed.error === "string" && parsed.error) return parsed.error
+  } catch {
+    // Not JSON, use the raw body below.
+  }
+  return body || fallback
+}
+
 export interface UploadProgress {
   loaded: number
   total: number
@@ -61,7 +74,7 @@ export async function uploadFile(
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(xhr.responseText.trim())
       } else {
-        reject(new ApiError(xhr.status, xhr.responseText || xhr.statusText))
+        reject(new ApiError(xhr.status, parseErrorMessage(xhr.responseText, xhr.statusText)))
       }
     })
     xhr.addEventListener("error", () => reject(new ApiError(0, "Network error")))
@@ -85,7 +98,7 @@ export async function downloadByCode(code: string, signal?: AbortSignal): Promis
   const res = await fetch(url.toString(), { method: "GET", signal })
 
   if (res.status === 404) throw new CodeNotFoundError(code)
-  if (!res.ok) throw new ApiError(res.status, await res.text().catch(() => res.statusText))
+  if (!res.ok) throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
 
   const form = await res.formData()
   const files: DownloadedFile[] = []
@@ -106,7 +119,7 @@ export async function loadConfiguration(
 
   const res = await fetch(url.toString(), { method: "GET", signal })
   if (!res.ok) {
-    throw new ApiError(res.status, await res.text().catch(() => res.statusText))
+    throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
   }
 
   const data = (await res.json()) as unknown
@@ -129,7 +142,7 @@ export async function saveConfiguration(
     signal,
   })
   if (!res.ok) {
-    throw new ApiError(res.status, await res.text().catch(() => res.statusText))
+    throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
   }
 }
 
@@ -159,7 +172,7 @@ export async function fetchStats(signal?: AbortSignal): Promise<StatsSnapshot> {
 
   const res = await fetch(url.toString(), { method: "GET", signal })
   if (!res.ok) {
-    throw new ApiError(res.status, await res.text().catch(() => res.statusText))
+    throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
   }
 
   const data = (await res.json()) as unknown
