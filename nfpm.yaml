@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Flick. All Rights Reserved.
+#
+# nfpm config: packages the CLI binary into a .deb for the APT repo.
+# VERSION and ARCH are injected by the CI (release-apt-job).
+name: flick
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+maintainer: Flick TEAM <matteo.tutti@epitech.eu>
+description: Frictionless file transfer CLI. Share files with a short code.
+homepage: https://flick.d3l.tech
+contents:
+  - src: build/bin/flick-deb-staging
+    dst: /usr/bin/flick
+    file_info:
+      mode: 0755

@@ -59,6 +59,33 @@ release-cli-job:
     - rsync -avz -e "ssh $SSH_OPTS" build/bin/version.json deploy@flick.d3l.tech:/var/www/flick/releases/version.json
     - rm -rf "$SSH_DIR"
 
+# APT Repo Release Job
+release-apt-job:
+  stage: release-cli
+  needs: [build-job]
+  rules:
+    - if: "$CI_COMMIT_TAG =~ /^v/"
+  script:
+    - git fetch origin main
+    - git merge-base --is-ancestor $CI_COMMIT_SHA origin/main || { echo "Tag is not on main, aborting..."; exit 1; }
+    - export VERSION="${CI_COMMIT_TAG#v}"
+    - |
+      for ARCH in amd64 arm64; do
+        cp "build/bin/flick-cli-linux-${ARCH}" build/bin/flick-deb-staging
+        docker run --rm -v "$PWD:/work" -w /work \
+          -e VERSION="$VERSION" -e ARCH="$ARCH" \
+          goreleaser/nfpm package -f nfpm.yaml -p deb -t "flick_${VERSION}_${ARCH}.deb"
+      done
+    - SSH_DIR=$(mktemp -d)
+    - cp "$FLICK_SSH_KNOWN_HOSTS" "$SSH_DIR/known_hosts"
+    - cp "$FLICK_SSH_PRIVATE" "$SSH_DIR/key"
+    - chmod 600 "$SSH_DIR/key"
+    - SSH_OPTS="-i $SSH_DIR/key -o UserKnownHostsFile=$SSH_DIR/known_hosts"
+    - echo "Publishing flick $VERSION to the APT repository"
+    - rsync -avz -e "ssh $SSH_OPTS" flick_${VERSION}_*.deb deploy@flick.d3l.tech:/tmp/
+    - ssh $SSH_OPTS deploy@flick.d3l.tech "reprepro -b /var/www/flick/apt includedeb stable /tmp/flick_${VERSION}_*.deb && rm /tmp/flick_${VERSION}_*.deb"
+    - rm -rf "$SSH_DIR"
+
 # Server Release Job
 release-server-job:
   stage: release-server
