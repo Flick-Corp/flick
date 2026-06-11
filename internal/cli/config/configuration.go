@@ -8,34 +8,58 @@
 package config
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Configuration structure type
 type Configuration struct {
-	ServerIP         string `json:"server_ip"`
+	ServerURL        string `json:"server_url"`
 	DefExpTime       string `json:"default_expiration"`
 	DefDownloadCount int32  `json:"default_download_count"`
 }
 
 // Server limits structure type (fetched dynamically, not saved in local config)
 type ServerLimits struct {
-	MaxFileSizeMb        int32  `json:"max_file_size_mb"`
-	MaxExpiration        string `json:"max_expiration"`
-	MaxDownloadCount     int32  `json:"max_download_count"`
+	MaxFileSizeMb    int32  `json:"max_file_size_mb"`
+	MaxExpiration    string `json:"max_expiration"`
+	MaxDownloadCount int32  `json:"max_download_count"`
 }
 
 // Global configuration of the CLI
 var Conf Configuration = Configuration{
-	ServerIP:         "127.0.0.1",
+	ServerURL:        "http://localhost",
 	DefExpTime:       "15m",
 	DefDownloadCount: 1,
+}
+
+// NormalizeServerURL: Normalize a server URL: default to https:// when no
+// scheme is given and strip any trailing slash.
+//
+// Params:
+// - raw (string): The raw URL as typed by the user.
+//
+// Returns:
+// - result1 (string): The normalized URL.
+func NormalizeServerURL(raw string) string {
+	serverURL := strings.TrimRight(strings.TrimSpace(raw), "/")
+	if serverURL != "" && !strings.Contains(serverURL, "://") {
+		serverURL = "https://" + serverURL
+	}
+	return serverURL
+}
+
+// APIBaseURL: Build the base URL of the API routes (server URL + /api/v1).
+//
+// Returns:
+// - result1 (string): The base URL, without trailing slash.
+func (c Configuration) APIBaseURL() string {
+	return NormalizeServerURL(c.ServerURL) + "/api/v1"
 }
 
 // GetServerLimits: Get the current server limits and configuration.
@@ -44,14 +68,7 @@ var Conf Configuration = Configuration{
 // - result1 (*ServerLimits): The server limits.
 // - result2 (error): If something occured.
 func GetServerLimits() (*ServerLimits, error) {
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // Dev only: local self-signed cert.
-		},
-	}
-	url := fmt.Sprintf("https://%s:15702/user-configure", Conf.ServerIP)
-
-	resp, err := client.Get(url)
+	resp, err := http.Get(Conf.APIBaseURL() + "/user-configure")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to fetch server configuration: %w", err)
 	}
@@ -142,14 +159,7 @@ func (c Configuration) SaveConfigurationFile() error {
 // Returns:
 // - result1 (error): If something occured.
 func (c *Configuration) ReplaceUsingServerConfiguration() error {
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // Dev only: local self-signed cert.
-		},
-	}
-	url := fmt.Sprintf("https://%s:15702/user-configure", c.ServerIP)
-
-	resp, err := client.Get(url)
+	resp, err := http.Get(c.APIBaseURL() + "/user-configure")
 	if err != nil {
 		return fmt.Errorf("Failed to fetch server configuration: %w", err)
 	}

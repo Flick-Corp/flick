@@ -1,14 +1,21 @@
-const API_PORT = 15702
+const API_PREFIX = "/api/v1"
 
+// In the browser the API lives on the same origin: Caddy routes /api/v1/* to
+// the Go API. Server-side (SSR) we talk to the API directly on the Docker
+// network, overridable through FLICK_API_URL.
 function getApiBase(): string {
   if (typeof window !== "undefined") {
-    return `https://${window.location.hostname}:${API_PORT}`
+    return window.location.origin
   }
-  return `https://localhost:${API_PORT}`
+  return process.env.FLICK_API_URL ?? "http://flick-api:15702"
+}
+
+function apiUrl(path: string): URL {
+  return new URL(`${API_PREFIX}${path}`, getApiBase())
 }
 
 export function getConfigureUrl(): string {
-  return new URL("/configure", getApiBase()).toString()
+  return apiUrl("/configure").toString()
 }
 
 export class CodeNotFoundError extends Error {
@@ -53,7 +60,7 @@ export async function uploadFile(
   onProgress?: (progress: UploadProgress) => void,
   signal?: AbortSignal
 ): Promise<string> {
-  const url = new URL("/upload", getApiBase())
+  const url = apiUrl("/upload")
   url.searchParams.set("expiration", expiration)
   url.searchParams.set("maxDownloadCount", String(maxDownloadCount))
 
@@ -92,7 +99,7 @@ export interface DownloadedFile {
 }
 
 export async function downloadByCode(code: string, signal?: AbortSignal): Promise<DownloadedFile[]> {
-  const url = new URL("/download", getApiBase())
+  const url = apiUrl("/download")
   url.searchParams.set("code", code)
 
   const res = await fetch(url.toString(), { method: "GET", signal })
@@ -115,7 +122,7 @@ export async function downloadByCode(code: string, signal?: AbortSignal): Promis
 export async function loadUserConfiguration(
   signal?: AbortSignal
 ): Promise<Record<string, string | number | boolean>> {
-  const url = new URL("/user-configure", getApiBase())
+  const url = apiUrl("/user-configure")
 
   const res = await fetch(url.toString(), { method: "GET", signal })
   if (!res.ok) {
@@ -132,7 +139,7 @@ export async function loadUserConfiguration(
 export async function loadConfiguration(
   signal?: AbortSignal
 ): Promise<Record<string, string | number | boolean>> {
-  const url = new URL("/configure", getApiBase())
+  const url = apiUrl("/configure")
 
   const res = await fetch(url.toString(), { method: "GET", signal })
   if (!res.ok) {
@@ -150,7 +157,7 @@ export async function saveConfiguration(
   values: Record<string, string | number | boolean>,
   signal?: AbortSignal
 ): Promise<void> {
-  const url = new URL("/configure", getApiBase())
+  const url = apiUrl("/configure")
 
   const res = await fetch(url.toString(), {
     method: "POST",
@@ -187,7 +194,7 @@ export interface StatsSnapshot {
 }
 
 export async function fetchStats(signal?: AbortSignal): Promise<StatsSnapshot> {
-  const url = new URL("/stats", getApiBase())
+  const url = apiUrl("/stats")
 
   const res = await fetch(url.toString(), { method: "GET", signal })
   if (!res.ok) {
@@ -221,7 +228,7 @@ export async function registerUser(
   password: string,
   signal?: AbortSignal
 ): Promise<AuthUser> {
-  const url = new URL("/register", getApiBase())
+  const url = apiUrl("/register")
 
   const res = await fetch(url.toString(), {
     method: "POST",
@@ -237,7 +244,7 @@ export async function registerUser(
 }
 
 export async function loginUser(email: string, password: string, signal?: AbortSignal): Promise<AuthUser> {
-  const url = new URL("/login", getApiBase())
+  const url = apiUrl("/login")
 
   const res = await fetch(url.toString(), {
     method: "POST",

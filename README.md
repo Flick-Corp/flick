@@ -97,25 +97,26 @@ cp .env.example .env
 make up
 ```
 
-Open `http://localhost:3000`. 🎉
+Open `http://localhost`. 🎉
 
 > [!IMPORTANT]
 > Set a strong `POSTGRES_PASSWORD` in `.env` before starting for the first time.
 
 > [!NOTE]
-> Flick runs on HTTPS only. Put your `cert.pem` and `key.pem` in the `certificates/` folder.
-> For a quick local test, generate a self-signed certificate:
+> Everything goes through the bundled [Caddy](https://caddyserver.com/) reverse proxy.
+> To serve Flick on your own domain with automatic HTTPS (Let's Encrypt) and HTTP/3,
+> just set it in `.env`:
 >
 > ```bash
-> openssl req -x509 -newkey rsa:4096 -nodes \
->   -keyout certificates/key.pem -out certificates/cert.pem \
->   -days 365 -subj "/CN=localhost"
+> FLICK_SITE_ADDRESS=flick.example.com
 > ```
+>
+> No certificate to generate or manage: Caddy takes care of it.
 
 | Service | URL |
 | ------- | --- |
-| 🌐 Web app | http://localhost:3000 |
-| ⚙️ API | https://localhost:15702 |
+| 🌐 Web app | http://localhost |
+| ⚙️ API | http://localhost/api/v1 |
 
 To stop Flick, run `make down`. Your data is kept safe.
 
@@ -162,7 +163,7 @@ Flick combines effortless sharing with full control over your server.
 - Human-friendly codes in the `word-word-number` format, easy to type and remember
 - Share code copied automatically to your clipboard after upload
 - Self-destructing files: expiration by time, by download count, or both
-- Fast transfers built on **HTTP/3 (QUIC)** with HTTP/2 fallback
+- Fast transfers with **HTTP/3 (QUIC)** and automatic HTTPS, served at the edge by Caddy
 
 ### 🌐 &nbsp;Web Experience
 
@@ -192,7 +193,8 @@ The server creates a default configuration on first start. The main knobs:
 
 ## Technologies Used
 
-- [Go](https://go.dev/) with [quic-go](https://github.com/quic-go/quic-go) (HTTP/3) and [Cobra](https://github.com/spf13/cobra)
+- [Go](https://go.dev/) with [Cobra](https://github.com/spf13/cobra)
+- [Caddy](https://caddyserver.com/) for automatic HTTPS and HTTP/3 at the edge
 - [Next.js](https://nextjs.org/) with [shadcn/ui](https://ui.shadcn.com/) and [Tailwind CSS](https://tailwindcss.com/)
 - [PostgreSQL](https://www.postgresql.org/) with [dbmate](https://github.com/amacneil/dbmate) migrations
 - [Docker Compose](https://docs.docker.com/compose/) for one-command deployment

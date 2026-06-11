@@ -64,11 +64,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "15702:15702/udp"
-      - "15702:15702/tcp"
-    volumes:
-      - ./certificates:/app/certificates:ro
     depends_on:
       flick-postgres:
         condition: service_healthy
@@ -86,10 +81,32 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-    ports:
-      - "3000:3000"
     depends_on:
       - flick-api
+    networks:
+      - flick
+
+  # Reverse proxy Service
+  flick-caddy:
+    image: caddy:2-alpine
+    container_name: flick-caddy
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      FLICK_SITE_ADDRESS: ${FLICK_SITE_ADDRESS:-http://localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - flick-caddy-data:/data
+      - flick-caddy-config:/config
+    depends_on:
+      - flick-api
+      - flick-web
     networks:
       - flick
 
@@ -99,3 +116,5 @@ networks:
 
 volumes:
   flick-postgres-data:
+  flick-caddy-data:
+  flick-caddy-config:

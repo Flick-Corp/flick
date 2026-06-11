@@ -49,15 +49,15 @@ func needChanges(input string) bool {
 func RunConfigure(cmd *cobra.Command, args []string) error {
 	var changeServer string
 	var changeDefExpTime string
-	var serverIP string
+	var serverURL string
 	var DefExpTime string
 
 	fmt.Printf("Change the default Flick server? (y/n): ")
 	fmt.Scan(&changeServer)
 	if needChanges(changeServer) {
-		fmt.Printf("Enter the remote Flick server (IP/DNS): ")
-		fmt.Scan(&serverIP)
-		config.Conf.ServerIP = serverIP // TODO: verify input
+		fmt.Printf("Enter the remote Flick server URL (e.g. https://flick.example.com): ")
+		fmt.Scan(&serverURL)
+		config.Conf.ServerURL = config.NormalizeServerURL(serverURL) // TODO: verify input
 	}
 
 	fmt.Printf("Change the default expiration time? (y/n): ")

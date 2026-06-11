@@ -9,7 +9,6 @@ package commands
 
 import (
 	"bytes"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"mime"
@@ -31,12 +30,7 @@ import (
 // Returns:
 // - result1 (error): An error occured.
 func doDownloadRequest(req *http.Request) error {
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // Dev only: local self-signed cert.
-		},
-	}
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Failure: Cannot access the server: %w", err)
 	}
@@ -82,10 +76,10 @@ func doDownloadRequest(req *http.Request) error {
 			if err != nil {
 				return err
 			}
-			defer file.Close()
 
 			proxyReader := io.TeeReader(part, bar)
 			_, err = io.Copy(file, proxyReader)
+			file.Close()
 
 			if err != nil {
 				return err
@@ -112,7 +106,7 @@ func RunDownload(cmd *cobra.Command, args []string) error {
 
 	body := &bytes.Buffer{}
 
-	req, err := http.NewRequest("GET", "https://"+config.Conf.ServerIP+":15702/download?code="+code, body)
+	req, err := http.NewRequest("GET", config.Conf.APIBaseURL()+"/download?code="+code, body)
 	if err != nil {
 		return fmt.Errorf("Failure: Cannot create the request for the server.")
 	}
