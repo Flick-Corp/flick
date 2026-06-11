@@ -9,7 +9,6 @@ package commands
 
 import (
 	"bytes"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -34,12 +33,7 @@ import (
 // Returns:
 // - result1 (error): An error occured.
 func doUploadRequest(req *http.Request, exp string) error {
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // Dev only: local self-signed cert.
-		},
-	}
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Failure: Cannot access the server: %w", err)
 	}
@@ -151,7 +145,7 @@ func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string) error 
 	params.Set("expiration", expValue)
 	params.Set("maxDownloadCount", mdcValue)
 
-	reqURL := fmt.Sprintf("https://%s:15702/upload?%s", config.Conf.ServerIP, params.Encode())
+	reqURL := fmt.Sprintf("%s/upload?%s", config.Conf.APIBaseURL(), params.Encode())
 
 	req, err := http.NewRequest("POST", reqURL, progressBody)
 	if err != nil {

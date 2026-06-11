@@ -57,28 +57,31 @@ func onDownloadFinished(code string) {
 // - writer (*multipart.Writer): The writer of the multipart.
 // - entries ([]os.DirEntry): The different entries of the directory.
 // - path (string): The path.
-func doDownloadMultipartForm(writer *multipart.Writer, entries []os.DirEntry, path string) {
+//
+// Returns:
+// - error: An error if one occurred.
+func doDownloadMultipartForm(writer *multipart.Writer, entries []os.DirEntry, path string) error {
 	for _, entry := range entries {
 		fullPath := path + "/" + entry.Name()
 		file, err := os.Open(fullPath)
 
 		if err != nil {
 			logging.LogInfoError("Cannot open file %q: %v", entry.Name(), err)
-			continue
+			return err
 		}
 
 		info, err := file.Stat()
 		if err != nil {
 			logging.LogInfoError("Cannot stat file %q: %v", entry.Name(), err)
 			file.Close()
-			continue
+			return err
 		}
 
 		part, err := writer.CreateFormFile("file", entry.Name())
 		if err != nil {
 			logging.LogInfoError("Cannot create multipart part for file %q: %v", entry.Name(), err)
 			file.Close()
-			continue
+			return err
 		}
 
 		_, err = io.Copy(part, file)
@@ -86,10 +89,11 @@ func doDownloadMultipartForm(writer *multipart.Writer, entries []os.DirEntry, pa
 
 		if err != nil {
 			logging.LogInfoError("Cannot send file %q: %v", entry.Name(), err)
-			continue
+			return err
 		}
 		logging.LogInfoSuccess("Sent file %q (%d bytes)", entry.Name(), info.Size())
 	}
+	return nil
 }
 
 // DownloadFileHandler: Build the download file handler.
@@ -123,19 +127,6 @@ func DownloadFileHandler() http.HandlerFunc {
 			return
 		}
 
-		var totalSize int64
-		for _, entry := range entries {
-			if info, err := entry.Info(); err == nil {
-				totalSize += info.Size()
-			}
-		}
-
-		writer := multipart.NewWriter(w)
-		defer writer.Close()
-
-		w.Header().Set("Content-Type", writer.FormDataContentType())
-		w.Header().Set("X-Total-Size", strconv.FormatInt(totalSize, 10))
-
 		metadataFilename := "." + code + "-metadata.json"
 		var filteredEntries []os.DirEntry
 		for _, entry := range entries {
@@ -144,7 +135,34 @@ func DownloadFileHandler() http.HandlerFunc {
 			}
 		}
 
-		doDownloadMultipartForm(writer, filteredEntries, codePath)
+		// Only count the files actually transmitted: announcing more than we
+		// send leaves client progress bars stuck below 100%.
+		var totalSize int64
+		for _, entry := range filteredEntries {
+			if info, err := entry.Info(); err == nil {
+				totalSize += info.Size()
+			}
+		}
+
+		writer := multipart.NewWriter(w)
+
+		w.Header().Set("Content-Type", writer.FormDataContentType())
+		w.Header().Set("X-Total-Size", strconv.FormatInt(totalSize, 10))
+
+		err = doDownloadMultipartForm(writer, filteredEntries, codePath)
+		if err != nil {
+			writer.Close()
+			WriteError(w, http.StatusInternalServerError, "Error transmitting the files")
+			return
+		}
+
+		if err := writer.Close(); err != nil {
+			logging.LogInfoError("Failed to close multipart writer: %v", err)
+		}
+		if flusher, ok := w.(http.Flusher); ok {
+			flusher.Flush()
+		}
+
 		onDownloadFinished(code)
 		IncDownloads()
 	}

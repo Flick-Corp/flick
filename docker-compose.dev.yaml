@@ -56,6 +56,10 @@ services:
       - flick-web-node-modules:/app/node_modules
       - flick-web-next-cache:/app/.next
 
+  # Reverse proxy Service
+  flick-caddy:
+    container_name: flick-caddy-dev
+
 volumes:
   flick-web-node-modules:
   flick-web-next-cache:

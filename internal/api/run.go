@@ -21,38 +21,10 @@ import (
 	"github.com/matteoepitech/flick/internal/api/path"
 	"github.com/matteoepitech/flick/internal/api/routes"
 	"github.com/matteoepitech/flick/internal/api/routes/account"
-	"github.com/quic-go/quic-go/http3"
 )
 
 // Constants
 const addr string = ":15702"
-const certFile string = "certificates/cert.pem"
-const keyFile string = "certificates/key.pem"
-
-// withCORS: Wrap a handler with permissive CORS headers so browsers on any origin can call the
-// API. Handles the preflight OPTIONS request transparently.
-//
-// Params:
-// - next (http.HandlerFunc): The wrapped handler.
-//
-// Returns:
-// - http.HandlerFunc: The wrapping handler with CORS headers applied.
-func withCORS(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "*")
-		w.Header().Set("Access-Control-Expose-Headers", "X-Total-Size, Content-Type")
-		w.Header().Set("Access-Control-Max-Age", "86400")
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		next(w, r)
-	}
-}
 
 // setupDatabase: Setup the databse and return the pool and queries.
 //
@@ -73,7 +45,8 @@ func setupDatabase(ctx context.Context) (*pgxpool.Pool, *database.Queries, error
 	return pool, database.New(pool), nil
 }
 
-// Run: Run the API on HTTP/3 (QUIC).
+// Run: Run the API over plain HTTP. TLS, HTTP/3 and same-origin routing are
+// handled by the Caddy reverse proxy sitting in front of the API.
 //
 // Params:
 // - ctx (context.Context): The context of the main.
@@ -92,30 +65,18 @@ func Run(ctx context.Context) error {
 	defer pool.Close()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/upload", withCORS(routes.UploadFileHandler()))
-	mux.HandleFunc("/download", withCORS(routes.DownloadFileHandler()))
-	mux.HandleFunc("/configure", withCORS(routes.SendServerConfig()))
-	mux.HandleFunc("/stats", withCORS(routes.SendStats()))
-	mux.HandleFunc("/user-configure", withCORS(routes.SendServerUserConfig()))
-	mux.HandleFunc("/register", withCORS(account.RegisterHandler(queries)))
-	mux.HandleFunc("/login", withCORS(account.LoginHandler(queries)))
+	mux.HandleFunc("/api/v1/upload", routes.UploadFileHandler())
+	mux.HandleFunc("/api/v1/download", routes.DownloadFileHandler())
+	mux.HandleFunc("/api/v1/configure", routes.SendServerConfig())
+	mux.HandleFunc("/api/v1/stats", routes.SendStats())
+	mux.HandleFunc("/api/v1/user-configure", routes.SendServerUserConfig())
+	mux.HandleFunc("/api/v1/register", account.RegisterHandler(queries))
+	mux.HandleFunc("/api/v1/login", account.LoginHandler(queries))
 	routes.WriteDefaultConfig()
 
-	h3Server := &http3.Server{
+	server := &http.Server{
 		Addr:    addr,
 		Handler: mux,
-	}
-
-	h2Handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := h3Server.SetQUICHeaders(w.Header()); err != nil {
-			logging.LogInfoError("Cannot set QUIC headers: %v", err)
-		}
-		mux.ServeHTTP(w, r)
-	})
-
-	h2Server := &http.Server{
-		Addr:    addr,
-		Handler: h2Handler,
 	}
 
 	// Init the code cache from disk into RAM.
@@ -129,13 +90,8 @@ func Run(ctx context.Context) error {
 	signal.Notify(stopSignal, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		if err := h3Server.ListenAndServeTLS(certFile, keyFile); err != nil {
-			logging.LogInfoError("HTTP/3 server stopped: %v", err)
-		}
-	}()
-	go func() {
-		if err := h2Server.ListenAndServeTLS(certFile, keyFile); err != nil {
-			logging.LogInfoError("HTTP/2 server stopped: %v", err)
+		if err := server.ListenAndServe(); err != nil {
+			logging.LogInfoError("HTTP server stopped: %v", err)
 		}
 	}()
 	<-stopSignal

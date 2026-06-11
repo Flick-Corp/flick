@@ -1,0 +1,18 @@
+# Copyright (c) 2026 Flick. All Rights Reserved.
+#
+# Single entrypoint for the whole stack: /api/v1/* goes to the Go API,
+# everything else to the Next.js web app.
+#
+# FLICK_SITE_ADDRESS drives the TLS behavior:
+#   flick.example.com  -> automatic HTTPS (Let's Encrypt) + HTTP/3
+#   http://localhost   -> plain HTTP, no certificates (dev / local default)
+
+{$FLICK_SITE_ADDRESS:http://localhost} {
+	handle /api/v1/* {
+		reverse_proxy flick-api:15702
+	}
+
+	handle {
+		reverse_proxy flick-web:3000
+	}
+}

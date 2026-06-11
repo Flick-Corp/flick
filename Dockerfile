@@ -33,7 +33,6 @@ WORKDIR /app
 
 COPY --from=builder /out/flick-api /app/flick-api
 
-EXPOSE 15702/udp
 EXPOSE 15702/tcp
 USER nonroot:nonroot
 
