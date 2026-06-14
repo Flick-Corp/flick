@@ -8,7 +8,6 @@
 package routes
 
 import (
-	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -27,16 +26,9 @@ import (
 // - code (string): The code to update.
 func onDownloadFinished(code string) {
 	metadataPath := path.GetDataDir() + "/" + code + "/"
-	metadataFile, err := os.Open(metadataPath + "." + code + "-metadata.json")
+	meta, err := metadata.LoadMetadata(path.GetDataDir(), code)
 	if err != nil {
-		logging.LogInfoError("Cannot open metadata file for code %q: %v", code, err)
-		return
-	}
-	defer metadataFile.Close()
-
-	var meta metadata.Metadata
-	if err := json.NewDecoder(metadataFile).Decode(&meta); err != nil {
-		logging.LogInfoError("Cannot decode metadata file for code %q: %v", code, err)
+		logging.LogInfoError("Cannot load metadata file for code %q: %v", code, err)
 		return
 	}
 

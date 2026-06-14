@@ -8,6 +8,7 @@
 package commands
 
 import (
+	"archive/zip"
 	"bytes"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -60,6 +62,85 @@ func doUploadRequest(req *http.Request, exp string) error {
 	return nil
 }
 
+// archiveToTemp: Build a zip archive of src into a temporary file and return its path.
+//
+// Params:
+// - src (string): The file or directory to archive.
+//
+// Returns:
+// - result1 (string): The path to the temporary zip file.
+// - result2 (error): An error if occured.
+func archiveToTemp(src string) (string, error) {
+	tmp, err := os.CreateTemp("", "flick-upload-*.zip")
+	if err != nil {
+		return "", fmt.Errorf("Failure: Cannot create temp archive: %w", err)
+	}
+	defer tmp.Close()
+
+	zw := zip.NewWriter(tmp)
+	root := filepath.Dir(src)
+
+	if err := addToZip(zw, root, src); err != nil {
+		zw.Close()
+		os.Remove(tmp.Name())
+		return "", fmt.Errorf("Failure: Cannot build archive: %w", err)
+	}
+
+	if err := zw.Close(); err != nil {
+		os.Remove(tmp.Name())
+		return "", fmt.Errorf("Failure: Cannot finalize archive: %w", err)
+	}
+	return tmp.Name(), nil
+}
+
+// addToZip: Add file(s) to the zip archive, storing each one with relative path.
+//
+// Params:
+// - zw (*zip.Writer): The zip writer to add entries to.
+// - root (string): The base directory used to compute relative paths.
+// - path (string): The current file or directory to add.
+//
+// Returns:
+// - result1 (error): An error if occured.
+func addToZip(zw *zip.Writer, root string, path string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	if info.IsDir() {
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			return err
+		}
+		for _, entry := range entries {
+			if err := addToZip(zw, root, filepath.Join(path, entry.Name())); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	relPath, err := filepath.Rel(root, path)
+	if err != nil {
+		return err
+	}
+
+	w, err := zw.Create(filepath.ToSlash(relPath))
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = io.Copy(w, f)
+	return err
+}
+
 // RunUpload: Run the upload command.
 //
 // Params:
@@ -83,10 +164,6 @@ func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string) error 
 	serverLimits, err := config.GetServerLimits()
 	if err != nil {
 		return fmt.Errorf("Failure: Cannot get server limits: %w", err)
-	}
-
-	if serverLimits.MaxFileSizeMb > 0 && stat.Size() > int64(serverLimits.MaxFileSizeMb)*1024*1024 {
-		return fmt.Errorf("Failure: The file is too large. The server only accepts files up to %d MB.", serverLimits.MaxFileSizeMb)
 	}
 
 	expValue := exp
@@ -120,24 +197,38 @@ func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string) error 
 		return fmt.Errorf("Failure: Cannot identify on the server: %w", err)
 	}
 
-	fmt.Printf("Uploading the file %s... (%d bytes)\n", stat.Name(), stat.Size())
-
-	file, err := os.Open(args[0])
+	archivePath, err := archiveToTemp(args[0])
 	if err != nil {
-		return fmt.Errorf("Failure: Cannot open that file.")
+		return err
 	}
-	defer file.Close()
+	defer os.Remove(archivePath)
+
+	archive, err := os.Open(archivePath)
+	if err != nil {
+		return fmt.Errorf("Failure: Cannot open the archive: %w", err)
+	}
+	defer archive.Close()
+
+	archiveStat, err := archive.Stat()
+	if err != nil {
+		return fmt.Errorf("Failure: Cannot stat the archive: %w", err)
+	}
+
+	if serverLimits.MaxFileSizeMb > 0 && archiveStat.Size() > int64(serverLimits.MaxFileSizeMb)*1024*1024 {
+		return fmt.Errorf("Failure: The upload is too large. The server only accepts up to %d MB.", serverLimits.MaxFileSizeMb)
+	}
+
+	fmt.Printf("Uploading %s... (%d bytes archived)\n", stat.Name(), archiveStat.Size())
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("file", stat.Name())
+	part, err := writer.CreateFormFile("file", stat.Name()+".zip")
 	if err != nil {
 		return fmt.Errorf("Failure: Cannot create the form file: %w", err)
 	}
 
-	_, err = io.Copy(part, file)
-	if err != nil {
-		return fmt.Errorf("Failure: Cannot copy that file.")
+	if _, err := io.Copy(part, archive); err != nil {
+		return fmt.Errorf("Failure: Cannot copy the archive.")
 	}
 	if err := writer.Close(); err != nil {
 		return fmt.Errorf("Failure: Cannot finalize the upload body: %w", err)

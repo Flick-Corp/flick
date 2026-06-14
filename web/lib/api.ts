@@ -1,3 +1,5 @@
+import JSZip from "jszip"
+
 const API_PREFIX = "/api/v1"
 
 // In the browser the API lives on the same origin: Caddy routes /api/v1/* to
@@ -64,8 +66,14 @@ export async function uploadFile(
   url.searchParams.set("expiration", expiration)
   url.searchParams.set("maxDownloadCount", String(maxDownloadCount))
 
+  // Like the CLI, the web always uploads a zip archive: the server stores it
+  // compressed and the client (CLI or web) extracts it on download.
+  const zip = new JSZip()
+  zip.file(file.name, file)
+  const archive = await zip.generateAsync({ type: "blob", compression: "DEFLATE" })
+
   const form = new FormData()
-  form.append("file", file)
+  form.append("file", archive, `${file.name}.zip`)
 
   return new Promise<string>((resolve, reject) => {
     const xhr = new XMLHttpRequest()
@@ -110,9 +118,16 @@ export async function downloadByCode(code: string, signal?: AbortSignal): Promis
   const form = await res.formData()
   const files: DownloadedFile[] = []
 
+  // Every part is a zip archive (see uploadFile): extract its entries so the
+  // user gets the real files back, not the .zip wrapper.
   for (const value of form.getAll("file")) {
-    if (value instanceof File) {
-      files.push({ name: value.name, blob: value, size: value.size })
+    if (!(value instanceof File)) continue
+
+    const zip = await JSZip.loadAsync(value)
+    for (const entry of Object.values(zip.files)) {
+      if (entry.dir) continue
+      const blob = await entry.async("blob")
+      files.push({ name: entry.name, blob, size: blob.size })
     }
   }
 
