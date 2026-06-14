@@ -27,6 +27,29 @@ type Metadata struct {
 	UploaderID           string `json:"uploader_id,omitempty"`
 }
 
+// LoadMetadata: Read and decode the metadata file of a given code.
+//
+// Params:
+// - dataDir (string): The data directory holding the code folders.
+// - code (string): The code whose metadata to load.
+//
+// Returns:
+// - result1 (Metadata): The decoded metadata.
+// - result2 (error): An error if occured.
+func LoadMetadata(dataDir string, code string) (Metadata, error) {
+	var meta Metadata
+	metadataPath := dataDir + code + "/." + code + "-metadata.json"
+
+	file, err := os.Open(metadataPath)
+	if err != nil {
+		return meta, err
+	}
+	defer file.Close()
+
+	err = json.NewDecoder(file).Decode(&meta)
+	return meta, err
+}
+
 // createMetadataFile: Creates the metadata file containing the expiration date.
 //
 // Params:
