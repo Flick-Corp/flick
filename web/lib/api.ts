@@ -224,6 +224,12 @@ export interface AuthUser {
   id: string
   username: string
   email: string
+  createdAt?: string
+}
+
+export interface AuthSession {
+  user: AuthUser
+  token: string
 }
 
 export async function registerUser(
@@ -247,7 +253,7 @@ export async function registerUser(
   return (await res.json()) as AuthUser
 }
 
-export async function loginUser(email: string, password: string, signal?: AbortSignal): Promise<AuthUser> {
+export async function loginUser(email: string, password: string, signal?: AbortSignal): Promise<AuthSession> {
   const url = apiUrl("/login")
 
   const res = await fetch(url.toString(), {
@@ -260,7 +266,24 @@ export async function loginUser(email: string, password: string, signal?: AbortS
     throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
   }
 
-  return (await res.json()) as AuthUser
+  // The server replies with { token, expires_at, user: { id, username, email, created_at } }.
+  const data = (await res.json()) as {
+    token?: string
+    user?: { id?: string; username?: string; email?: string; created_at?: string }
+  }
+  if (!data.token || !data.user) {
+    throw new ApiError(res.status, "Invalid login response")
+  }
+
+  return {
+    token: data.token,
+    user: {
+      id: data.user.id ?? "",
+      username: data.user.username ?? "",
+      email: data.user.email ?? "",
+      createdAt: data.user.created_at,
+    },
+  }
 }
 
 export function triggerBlobDownload(blob: Blob, filename: string): void {

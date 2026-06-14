@@ -84,6 +84,7 @@
   },
   "Header": {
     "login": "Se connecter",
+    "profile": "Profil",
     "send": "Envoyer un fichier",
     "receive": "Recevoir avec un code",
     "dashboard": "Tableau de bord"
@@ -205,6 +206,21 @@
     "error": "Impossible de créer le compte. Réessayez.",
     "hasAccount": "Déjà un compte ?",
     "loginLink": "Connectez-vous"
+  },
+  "Profile": {
+    "back": "Retour",
+    "title": "Profil",
+    "subtitle": "Les informations de votre compte.",
+    "notSignedIn": "Vous n'êtes pas connecté.",
+    "signIn": "Se connecter",
+    "username": "Nom d'utilisateur",
+    "email": "Email",
+    "userId": "Identifiant",
+    "memberSince": "Membre depuis",
+    "unknown": "Inconnu",
+    "copy": "Copier",
+    "copied": "Copié",
+    "logout": "Se déconnecter"
   },
   "HowItWorks": {
     "eyebrow": "Comment ça marche",

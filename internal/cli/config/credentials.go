@@ -21,6 +21,7 @@ import (
 // Credentials structure type, stored at ~/.flick/credentials.json
 type Credentials struct {
 	UserID string `json:"user_id"`
+	Token  string `json:"token"`
 }
 
 // credentialsPath: Resolve the credentials file path.
