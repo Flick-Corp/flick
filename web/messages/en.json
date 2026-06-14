@@ -84,6 +84,7 @@
   },
   "Header": {
     "login": "Sign in",
+    "profile": "Profile",
     "send": "Send a file",
     "receive": "Receive with a code",
     "dashboard": "Dashboard"
@@ -205,6 +206,21 @@
     "error": "Could not create the account. Please retry.",
     "hasAccount": "Already have an account?",
     "loginLink": "Sign in"
+  },
+  "Profile": {
+    "back": "Back",
+    "title": "Profile",
+    "subtitle": "Your account information.",
+    "notSignedIn": "You are not signed in.",
+    "signIn": "Sign in",
+    "username": "Username",
+    "email": "Email",
+    "userId": "User ID",
+    "memberSince": "Member since",
+    "unknown": "Unknown",
+    "copy": "Copy",
+    "copied": "Copied",
+    "logout": "Sign out"
   },
   "HowItWorks": {
     "eyebrow": "How it works",

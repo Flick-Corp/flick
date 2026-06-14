@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ApiError, loginUser } from "@/lib/api"
+import { saveSession } from "@/lib/auth"
 import { Link, useRouter } from "@/i18n/navigation"
 
 export default function LoginPage() {
@@ -31,7 +32,8 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      await loginUser(email.trim(), password)
+      const session = await loginUser(email.trim(), password)
+      saveSession(session)
       router.push("/dashboard")
     } catch (err) {
       console.error(err)

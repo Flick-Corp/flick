@@ -74,6 +74,7 @@ func Run(ctx context.Context) error {
 	mux.HandleFunc("/api/v1/user-configure", routes.SendServerUserConfig())
 	mux.HandleFunc("/api/v1/register", account.RegisterHandler(queries))
 	mux.HandleFunc("/api/v1/login", account.LoginHandler(queries))
+	mux.HandleFunc("/api/v1/whoami", account.WhoamiHandler(queries))
 	routes.WriteDefaultConfig()
 
 	server := &http.Server{
