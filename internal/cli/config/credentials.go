@@ -71,7 +71,7 @@ func loadCredentials() (*Credentials, error) {
 //
 // Returns:
 // - result1 (error): If something occured.
-func saveCredentials(creds Credentials) error {
+func SaveCredentials(creds Credentials) error {
 	credentialsFile, err := credentialsPath()
 	if err != nil {
 		return err
@@ -143,7 +143,7 @@ func EnsureCredentials() (*Credentials, error) {
 		return nil, err
 	}
 
-	if err := saveCredentials(*creds); err != nil {
+	if err := SaveCredentials(*creds); err != nil {
 		return nil, err
 	}
 	return creds, nil

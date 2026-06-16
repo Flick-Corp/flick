@@ -465,6 +465,24 @@ export async function loginUser(email: string, password: string, signal?: AbortS
   }
 }
 
+// approveDevice: Approve a pending CLI device authorization. `userCode` is the
+// short code the CLI displayed; `token` is the current web session token, which
+// proves who is approving. On success the server stores a fresh session token on
+// the device authorization, which the CLI then fetches on its next poll.
+export async function approveDevice(userCode: string, token: string, signal?: AbortSignal): Promise<void> {
+  const url = apiUrl("/device/approve")
+
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_code: userCode, token }),
+    signal,
+  })
+  if (!res.ok) {
+    throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
+  }
+}
+
 // whoami: Resolve the account a session token belongs to. Throws an ApiError
 // with status 401 when the token is unknown or its user no longer exists, which
 // callers use to purge a stale session. Uses POST because fetch() cannot send a

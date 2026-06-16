@@ -54,6 +54,49 @@ func (ns NullGroupRole) Value() (driver.Value, error) {
 	return string(ns.GroupRole), nil
 }
 
+type OauthStatus string
+
+const (
+	OauthStatusPending  OauthStatus = "pending"
+	OauthStatusApproved OauthStatus = "approved"
+	OauthStatusDenied   OauthStatus = "denied"
+)
+
+func (e *OauthStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = OauthStatus(s)
+	case string:
+		*e = OauthStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for OauthStatus: %T", src)
+	}
+	return nil
+}
+
+type NullOauthStatus struct {
+	OauthStatus OauthStatus `json:"oauth_status"`
+	Valid       bool        `json:"valid"` // Valid is true if OauthStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullOauthStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.OauthStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.OauthStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullOauthStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.OauthStatus), nil
+}
+
 type UserRole string
 
 const (
@@ -99,6 +142,16 @@ func (ns NullUserRole) Value() (driver.Value, error) {
 type AnonymousUser struct {
 	ID        pgtype.UUID        `json:"id"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type DeviceAuthorization struct {
+	DeviceCode   string             `json:"device_code"`
+	UserCode     string             `json:"user_code"`
+	Status       OauthStatus        `json:"status"`
+	UserID       pgtype.UUID        `json:"user_id"`
+	SessionToken *string            `json:"session_token"`
+	ExpiresAt    pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 }
 
 type Group struct {

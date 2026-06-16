@@ -8,6 +8,7 @@
 package config
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/schollz/progressbar/v3"
 )
@@ -31,15 +33,24 @@ type ReleaseResponse struct {
 	URLWindowsAMD64 string `json:"url_windows_amd64"`
 }
 
-// needUpdates: Check function to ask user to do update or not.
+// getAnswer: Get the answer of the user.
 //
-// Params:
-// - input (string): The input of the updates.
+// Returns:
+// - result1 (string): The input.
+func getAnswer() string {
+	reader := bufio.NewReader(os.Stdin)
+	changeServer, _ := reader.ReadString('\n')
+	changeServer = strings.TrimSpace(changeServer)
+	return changeServer
+}
+
+// needChanges: Check function to see if there is any changes.
 //
 // Returns:
 // - result1 (bool): True or false.
-func needUpdates(input string) bool {
-	return input == "y" || input == "Y"
+func needUpdates() bool {
+	input := strings.ToLower(getAnswer())
+	return input == "y" || input == "yes"
 }
 
 // getReleaseVersion: Get the version of the release.
@@ -144,12 +155,9 @@ func CheckUpdate(currentVersion string) {
 	}
 
 	if currentVersion != release.Version {
-		var autoUpdateQuestion string
-
 		fmt.Println("🎉 New update available! (" + currentVersion + " -> " + release.Version + ")")
-		fmt.Printf("Do you want to auto-update? (y/n): ")
-		fmt.Scan(&autoUpdateQuestion)
-		if needUpdates(autoUpdateQuestion) {
+		fmt.Printf("Do you want to auto-update? [y/N]: ")
+		if needUpdates() {
 			if UpdateNewVersion(release) != nil {
 				fmt.Println("Failure: Cannot update to the latest version.")
 			} else {

@@ -22,8 +22,8 @@ import (
 	"github.com/matteoepitech/flick/internal/api/routes"
 )
 
-// Session lifetime before the token expires.
-const sessionDuration = 7 * 24 * time.Hour // 7 days
+// SessionDuration is the session lifetime before the token expires.
+const SessionDuration = 7 * 24 * time.Hour // 7 days
 
 // LoginRequest structure.
 type LoginRequest struct {
@@ -38,12 +38,12 @@ type LoginResponse struct {
 	User      RegisterResponse   `json:"user"`
 }
 
-// generateToken: Generate a random opaque session token.
+// GenerateToken: Generate a random opaque session token.
 //
 // Returns:
 // - result1 (string): The token, URL-safe base64 encoded.
 // - result2 (error): An error if randomness is unavailable.
-func generateToken() (string, error) {
+func GenerateToken() (string, error) {
 	raw := make([]byte, 32)
 	if _, err := rand.Read(raw); err != nil {
 		return "", err
@@ -94,7 +94,7 @@ func LoginHandler(queries *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		token, err := generateToken()
+		token, err := GenerateToken()
 		if err != nil {
 			routes.WriteError(w, http.StatusInternalServerError, "Cannot create session")
 			return
@@ -103,7 +103,7 @@ func LoginHandler(queries *database.Queries) http.HandlerFunc {
 		session, err := queries.CreateSession(r.Context(), database.CreateSessionParams{
 			Token:     token,
 			UserID:    user.ID,
-			ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(sessionDuration), Valid: true},
+			ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(SessionDuration), Valid: true},
 		})
 		if err != nil {
 			routes.WriteError(w, http.StatusInternalServerError, "Cannot create session")

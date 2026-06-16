@@ -27,6 +27,17 @@ CREATE TYPE public.group_role AS ENUM (
 
 
 --
+-- Name: oauth_status; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.oauth_status AS ENUM (
+    'pending',
+    'approved',
+    'denied'
+);
+
+
+--
 -- Name: user_role; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -46,6 +57,21 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.anonymous_users (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: device_authorizations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.device_authorizations (
+    device_code text NOT NULL,
+    user_code text NOT NULL,
+    status public.oauth_status DEFAULT 'pending'::public.oauth_status NOT NULL,
+    user_id uuid,
+    session_token text,
+    expires_at timestamp with time zone NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
@@ -114,6 +140,22 @@ CREATE TABLE public.users (
 
 ALTER TABLE ONLY public.anonymous_users
     ADD CONSTRAINT anonymous_users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: device_authorizations device_authorizations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.device_authorizations
+    ADD CONSTRAINT device_authorizations_pkey PRIMARY KEY (device_code);
+
+
+--
+-- Name: device_authorizations device_authorizations_user_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.device_authorizations
+    ADD CONSTRAINT device_authorizations_user_code_key UNIQUE (user_code);
 
 
 --
@@ -192,6 +234,22 @@ CREATE INDEX sessions_expires_at_idx ON public.sessions USING btree (expires_at)
 --
 
 CREATE INDEX sessions_user_id_idx ON public.sessions USING btree (user_id);
+
+
+--
+-- Name: device_authorizations device_authorizations_session_token_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.device_authorizations
+    ADD CONSTRAINT device_authorizations_session_token_fkey FOREIGN KEY (session_token) REFERENCES public.sessions(token) ON DELETE CASCADE;
+
+
+--
+-- Name: device_authorizations device_authorizations_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.device_authorizations
+    ADD CONSTRAINT device_authorizations_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
