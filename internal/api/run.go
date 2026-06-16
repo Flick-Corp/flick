@@ -22,6 +22,7 @@ import (
 	"github.com/matteoepitech/flick/internal/api/path"
 	"github.com/matteoepitech/flick/internal/api/routes"
 	"github.com/matteoepitech/flick/internal/api/routes/account"
+	"github.com/matteoepitech/flick/internal/api/routes/account/oauth"
 	"github.com/matteoepitech/flick/internal/api/routes/files"
 )
 
@@ -77,6 +78,9 @@ func Run(ctx context.Context) error {
 	mux.HandleFunc("/api/v1/register", account.RegisterHandler(queries))
 	mux.HandleFunc("/api/v1/login", account.LoginHandler(queries))
 	mux.HandleFunc("/api/v1/whoami", account.WhoamiHandler(queries))
+	mux.HandleFunc("/api/v1/device/code", oauth.DeviceCodeHandler(queries))
+	mux.HandleFunc("/api/v1/device/token", oauth.DeviceTokenHandler(queries))
+	mux.HandleFunc("/api/v1/device/approve", oauth.DeviceApproveHandler(queries))
 	routes.WriteDefaultConfig()
 
 	server := &http.Server{

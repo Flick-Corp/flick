@@ -11,6 +11,12 @@ CREATE TYPE GROUP_ROLE AS ENUM (
     'owner'
 );
 
+CREATE TYPE OAUTH_STATUS AS ENUM (
+    'pending',
+    'approved',
+    'denied'
+);
+
 CREATE TABLE users (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username       TEXT        NOT NULL UNIQUE,
@@ -49,6 +55,19 @@ CREATE TABLE anonymous_users (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE device_authorizations (
+      device_code   TEXT         PRIMARY KEY NOT NULL,
+      user_code     TEXT         UNIQUE NOT NULL,
+      status        oauth_status NOT NULL DEFAULT 'pending',
+      user_id       UUID,
+      session_token TEXT,
+      expires_at    TIMESTAMPTZ  NOT NULL,
+      created_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
+
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (session_token) REFERENCES sessions(token) ON DELETE CASCADE
+  );
+
 
 -- migrate:down
 DROP TABLE anonymous_users;
@@ -56,5 +75,7 @@ DROP TABLE user_groups;
 DROP TABLE groups;
 DROP TABLE users;
 DROP TABLE sessions;
+DROP TABLE device_authorizations;
 DROP TYPE USER_ROLE;
 DROP TYPE GROUP_ROLE;
+DROP TYPE OAUTH_STATUS;
