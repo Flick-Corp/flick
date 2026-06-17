@@ -17,6 +17,7 @@ import (
 	"github.com/matteoepitech/flick/internal/api/serverconfig"
 	"github.com/matteoepitech/flick/internal/api/utils"
 	"github.com/matteoepitech/flick/internal/api/utils/data"
+	"github.com/matteoepitech/flick/internal/utils/checksum"
 )
 
 // struct used for the JSON template
@@ -25,6 +26,7 @@ type Metadata struct {
 	CurrentDownloadCount int32  `json:"current_download_count"`
 	MaxDownloadCount     int32  `json:"max_download_count"`
 	UploaderID           string `json:"uploader_id,omitempty"`
+	Checksum             string `json:"checksum,omitempty"`
 }
 
 // LoadMetadata: Read and decode the metadata file of a given code.
@@ -146,6 +148,26 @@ func SetUploaderID(metadata *Metadata, uploaderID string) bool {
 	}
 
 	metadata.UploaderID = uploaderID
+	return true
+}
+
+// SetChecksum: Defines the BLAKE3 checksum of the uploaded archive, as computed
+// and sent by the client. The checksum lets the downloader confirm the bytes it
+// receives are intact. A missing or malformed digest is rejected.
+//
+// Params:
+// - metadata (*Metadata): The metadata to modify.
+// - sum (string): The hex-encoded BLAKE3 digest sent by the client.
+//
+// Returns:
+// - result1 (bool): Return true if the metadata has been changed, else false.
+func SetChecksum(metadata *Metadata, sum string) bool {
+	if !checksum.IsValidHex(sum) {
+		logging.LogInfoError("Invalid or missing checksum %q", sum)
+		return false
+	}
+
+	metadata.Checksum = sum
 	return true
 }
 

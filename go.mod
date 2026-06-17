@@ -6,10 +6,12 @@ require (
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/quic-go/quic-go v0.60.0
 	github.com/schollz/progressbar/v3 v3.19.0
 	github.com/spf13/cobra v1.10.2
 	github.com/tiagomelo/go-clipboard v0.1.2
 	golang.org/x/crypto v0.51.0
+	lukechampine.com/blake3 v1.4.1
 )
 
 require (
@@ -20,11 +22,11 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
-	github.com/quic-go/quic-go v0.60.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	golang.org/x/net v0.55.0 // indirect

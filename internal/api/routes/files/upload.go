@@ -107,7 +107,7 @@ func UploadFileHandler(queries *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		// SetExpiration / SetMaxDownloadCount log the precise reason themselves.
+		// SetExpiration / SetMaxDownloadCount / SetChecksum log the precise reason themselves.
 		if !metadata.SetExpiration(m, r.URL.Query().Get("expiration")) {
 			routes.WriteError(w, http.StatusBadRequest, "Invalid expiration time")
 			return
@@ -115,6 +115,11 @@ func UploadFileHandler(queries *database.Queries) http.HandlerFunc {
 
 		if !metadata.SetMaxDownloadCount(m, r.URL.Query().Get("maxDownloadCount")) {
 			routes.WriteError(w, http.StatusBadRequest, "Invalid max download count")
+			return
+		}
+
+		if !metadata.SetChecksum(m, r.Header.Get("X-Flick-Checksum")) {
+			routes.WriteError(w, http.StatusBadRequest, "Invalid or missing checksum")
 			return
 		}
 

@@ -1,4 +1,5 @@
 import JSZip from "jszip"
+import { hashBlob, equal } from "@/lib/checksum"
 
 const API_PREFIX = "/api/v1"
 
@@ -34,6 +35,18 @@ export class ApiError extends Error {
   ) {
     super(message)
     this.name = "ApiError"
+  }
+}
+
+// Thrown when a downloaded archive's BLAKE3 digest does not match the one the
+// server announced: the bytes were corrupted in transit and must not be saved.
+export class ChecksumMismatchError extends Error {
+  constructor(
+    public expected: string,
+    public got: string
+  ) {
+    super("Downloaded file is corrupted (checksum mismatch)")
+    this.name = "ChecksumMismatchError"
   }
 }
 
@@ -198,6 +211,12 @@ export async function uploadFile(
   }
 
   const archive = await zip.generateAsync({ type: "blob", compression: "DEFLATE" })
+
+  // Checksum the exact archive bytes we are about to upload; the server stores
+  // this digest and hands it back on download so the downloader can confirm the
+  // transfer is intact. Identical to the CLI and Go server (BLAKE3 hex).
+  const archiveChecksum = await hashBlob(archive)
+
   const form = new FormData()
   form.append("file", archive, randomArchiveName())
 
@@ -205,6 +224,7 @@ export async function uploadFile(
     const xhr = new XMLHttpRequest()
     xhr.open("POST", url.toString())
     xhr.setRequestHeader("X-Flick-User-ID", uploaderId)
+    xhr.setRequestHeader("X-Flick-Checksum", archiveChecksum)
 
     xhr.upload.addEventListener("progress", (event) => {
       if (event.lengthComputable && onProgress) {
@@ -247,10 +267,24 @@ export async function downloadByCode(code: string, signal?: AbortSignal): Promis
   if (res.status === 404) throw new CodeNotFoundError(code)
   if (!res.ok) throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
 
+  // The server announces the stored archive's BLAKE3 digest. Older uploads
+  // without a stored checksum omit it, in which case we skip verification.
+  const expectedChecksum = res.headers.get("X-Flick-Checksum")
+
   const form = await res.formData()
   const archives: DownloadedArchive[] = []
   for (const value of form.getAll("file")) {
     if (!(value instanceof File)) continue
+
+    // Recompute over the bytes we actually received and refuse a corrupted
+    // archive before handing it to the caller to save.
+    if (expectedChecksum) {
+      const got = await hashBlob(value)
+      if (!equal(got, expectedChecksum)) {
+        throw new ChecksumMismatchError(expectedChecksum, got)
+      }
+    }
+
     archives.push({ name: value.name, blob: value })
   }
   return archives
