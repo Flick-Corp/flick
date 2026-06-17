@@ -23,6 +23,7 @@ import (
 
 	"github.com/matteoepitech/flick/internal/cli/config"
 	"github.com/matteoepitech/flick/internal/cli/network"
+	"github.com/matteoepitech/flick/internal/utils/checksum"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 	"github.com/tiagomelo/go-clipboard/clipboard"
@@ -239,6 +240,11 @@ func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string) error 
 	}
 	defer os.Remove(archivePath)
 
+	archiveChecksum, err := checksum.HashFile(archivePath)
+	if err != nil {
+		return fmt.Errorf("Failure: Cannot checksum the archive: %w", err)
+	}
+
 	archive, err := os.Open(archivePath)
 	if err != nil {
 		return fmt.Errorf("Failure: Cannot open the archive: %w", err)
@@ -290,6 +296,7 @@ func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string) error 
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("X-Flick-User-ID", creds.UserID)
+	req.Header.Set("X-Flick-Checksum", archiveChecksum)
 	req.ContentLength = int64(body.Len())
 
 	if err := doUploadRequest(req, exp); err != nil {

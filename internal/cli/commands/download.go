@@ -25,6 +25,7 @@ import (
 	"github.com/matteoepitech/flick/internal/api/utils"
 	"github.com/matteoepitech/flick/internal/cli/config"
 	"github.com/matteoepitech/flick/internal/cli/network"
+	"github.com/matteoepitech/flick/internal/utils/checksum"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 )
@@ -81,6 +82,8 @@ func doDownloadRequest(req *http.Request) error {
 
 	reader := multipart.NewReader(resp.Body, boundary)
 
+	expectedChecksum := resp.Header.Get("X-Flick-Checksum")
+
 	// Uploads are always stored as a zip archive, so every "file" part is one
 	// archive that we extract into the current directory.
 	for {
@@ -96,7 +99,7 @@ func doDownloadRequest(req *http.Request) error {
 			continue
 		}
 
-		if err := downloadArchive(part, bar); err != nil {
+		if err := downloadArchive(part, bar, expectedChecksum); err != nil {
 			return err
 		}
 	}
@@ -109,22 +112,32 @@ func doDownloadRequest(req *http.Request) error {
 // Params:
 // - part (io.Reader): The multipart file stream carrying the zip.
 // - bar (*progressbar.ProgressBar): The progress bar to feed while downloading.
+// - expectedChecksum (string): The archive's BLAKE3 digest announced by the server, or empty to skip integrity verification.
 //
 // Returns:
 // - result1 (error): An error if occured.
-func downloadArchive(part io.Reader, bar *progressbar.ProgressBar) error {
+func downloadArchive(part io.Reader, bar *progressbar.ProgressBar, expectedChecksum string) error {
 	tmp, err := os.CreateTemp("", "flick-download-*.zip")
 	if err != nil {
 		return fmt.Errorf("Failure: Cannot create temp archive: %w", err)
 	}
 	defer os.Remove(tmp.Name())
 
-	proxyReader := io.TeeReader(part, bar)
+	// Hash the bytes as we stream them in, so verification costs no extra read.
+	hasher := checksum.New()
+	proxyReader := io.TeeReader(part, io.MultiWriter(bar, hasher))
 	if _, err := io.Copy(tmp, proxyReader); err != nil {
 		tmp.Close()
 		return fmt.Errorf("Failure: Cannot download the archive: %w", err)
 	}
 	tmp.Close()
+
+	if expectedChecksum != "" {
+		got := checksum.Sum(hasher)
+		if !checksum.Equal(got, expectedChecksum) {
+			return fmt.Errorf("Failure: checksum mismatch, the downloaded file is corrupted (expected %s, got %s)", expectedChecksum, got)
+		}
+	}
 
 	return extractZip(tmp.Name(), ".")
 }

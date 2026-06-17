@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@noble/hashes": "^2.2.0",
     "@swc/helpers": "^0.5.22",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -142,6 +142,14 @@ func DownloadFileHandler() http.HandlerFunc {
 		w.Header().Set("Content-Type", writer.FormDataContentType())
 		w.Header().Set("X-Total-Size", strconv.FormatInt(totalSize, 10))
 
+		if meta, err := metadata.LoadMetadata(path.GetDataDir(), code); err == nil {
+			if meta.Checksum != "" {
+				w.Header().Set("X-Flick-Checksum", meta.Checksum)
+			}
+		} else {
+			logging.LogInfoError("Cannot load metadata for code %q to send checksum: %v", code, err)
+		}
+
 		err = doDownloadMultipartForm(writer, filteredEntries, codePath)
 		if err != nil {
 			writer.Close()
