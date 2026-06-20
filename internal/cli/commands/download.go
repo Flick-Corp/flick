@@ -45,6 +45,7 @@ type downloadInfoResponse struct {
 	Items             []downloadInfoItem `json:"items"`
 	Encrypted         bool               `json:"encrypted"`
 	PasswordProtected bool               `json:"passwordProtected"`
+	Message           string             `json:"message"`
 }
 
 // doDownloadRequest: Do the download request on the server.
@@ -327,6 +328,9 @@ func fetchDownloadInfo(code string, password string) (downloadInfoResponse, erro
 // Params:
 // - info (downloadInfoResponse): The listing to print.
 func printDownloadInfo(info downloadInfoResponse) {
+	if info.Message != "" {
+		fmt.Printf("\n"+utils.Yellow+"Message from the sender:"+utils.Reset+" %s\n", info.Message)
+	}
 	if len(info.Items) == 0 {
 		fmt.Println("This code holds no files.")
 		return

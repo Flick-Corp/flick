@@ -11,6 +11,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -228,10 +229,11 @@ func randomArchiveName() string {
 // - mdc (string): The Max Download Count of this upload.
 // - encrypt (bool): Encrypt the archive end-to-end before uploading.
 // - password (string): Protect the download with a password, or empty for none.
+// - message (string): A personal note shown to the downloader, or empty for none.
 //
 // Returns:
 // - result1 (error): An error if occured.
-func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string, encrypt bool, password string) error {
+func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string, encrypt bool, password string, message string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("Failure: Internal CLI error.")
 	}
@@ -363,6 +365,9 @@ func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string, encryp
 	}
 	if password != "" {
 		req.Header.Set("X-Flick-Password", password)
+	}
+	if message != "" {
+		req.Header.Set("X-Flick-Message", base64.StdEncoding.EncodeToString([]byte(message)))
 	}
 	req.ContentLength = int64(body.Len())
 

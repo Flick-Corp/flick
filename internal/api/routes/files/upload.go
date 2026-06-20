@@ -8,6 +8,7 @@
 package files
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
@@ -125,6 +126,21 @@ func UploadFileHandler(queries *database.Queries) http.HandlerFunc {
 
 		if !metadata.SetPassword(m, r.Header.Get("X-Flick-Password")) {
 			routes.WriteError(w, http.StatusBadRequest, "Invalid password")
+			return
+		}
+
+		message := ""
+		if raw := r.Header.Get("X-Flick-Message"); raw != "" {
+			decoded, err := base64.StdEncoding.DecodeString(raw)
+			if err != nil {
+				logging.LogInfoError("Cannot decode message header: %v", err)
+				routes.WriteError(w, http.StatusBadRequest, "Invalid message")
+				return
+			}
+			message = string(decoded)
+		}
+		if !metadata.SetMessage(m, message) {
+			routes.WriteError(w, http.StatusBadRequest, "Invalid message")
 			return
 		}
 

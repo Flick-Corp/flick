@@ -29,6 +29,7 @@ func init() {
 	rootCmd.Flags().StringP("mdc", "d", strconv.FormatInt(int64(config.Conf.DefDownloadCount), 10), "Max download count")
 	rootCmd.Flags().BoolP("encrypt", "e", false, "Encrypt the upload end-to-end")
 	rootCmd.Flags().StringP("password", "p", "", "Protect the download with a password")
+	rootCmd.Flags().StringP("message", "m", "", "Attach a personal message shown to the downloader")
 }
 
 // Execute: Execute the root command.
@@ -59,6 +60,7 @@ func runCLI(cmd *cobra.Command, args []string) error {
 	mdc, _ := cmd.Flags().GetString("mdc")
 	encrypt, _ := cmd.Flags().GetBool("encrypt")
 	password, _ := cmd.Flags().GetString("password")
+	message, _ := cmd.Flags().GetString("message")
 
 	for _, sub := range cmd.Commands() {
 		if sub.Name() == args[0] {
@@ -66,5 +68,5 @@ func runCLI(cmd *cobra.Command, args []string) error {
 		}
 
 	}
-	return RunUpload(cmd, args, exp, mdc, encrypt, password)
+	return RunUpload(cmd, args, exp, mdc, encrypt, password, message)
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronLeft, Download, FileText, Folder, KeyRound, Loader2, Lock } from "lucide-react"
+import { ChevronLeft, Download, FileText, Folder, KeyRound, Loader2, Lock, MessageSquareText } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { use, useEffect, useState, type FormEvent } from "react"
 
@@ -136,6 +136,16 @@ function ReadyView({ info, code }: { info: DownloadInfo; code: string }) {
 
   return (
     <form onSubmit={handleDownload} className="flex flex-col gap-4">
+      {info.message && (
+        <Card className="flex flex-col gap-2 p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            <MessageSquareText className="size-4" />
+            {t("message")}
+          </div>
+          <p className="text-sm break-words whitespace-pre-wrap text-foreground">{info.message}</p>
+        </Card>
+      )}
+
       <Card className="p-2">
         <ul className="flex flex-col">
           {items.map((item) => (

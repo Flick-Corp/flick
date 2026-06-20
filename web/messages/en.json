@@ -178,7 +178,8 @@
     "encryptedHint": "This file is end-to-end encrypted, so it cannot be downloaded from the web. Use the Flick CLI with the full code, including the part after #.",
     "passwordProtected": "Password protected",
     "passwordPlaceholder": "Enter the password",
-    "wrongPassword": "Wrong password. Please try again."
+    "wrongPassword": "Wrong password. Please try again.",
+    "message": "Message from the sender"
   },
   "Login": {
     "back": "Back",

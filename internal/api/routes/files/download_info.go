@@ -34,6 +34,7 @@ type downloadInfoResponse struct {
 	Items             []downloadInfoItem `json:"items"`
 	Encrypted         bool               `json:"encrypted,omitempty"`
 	PasswordProtected bool               `json:"passwordProtected,omitempty"`
+	Message           string             `json:"message,omitempty"`
 }
 
 // DownloadInfoHandler: List the files behind a code without consuming a download.
@@ -72,6 +73,11 @@ func DownloadInfoHandler() http.HandlerFunc {
 		meta, metaErr := metadata.LoadMetadata(path.GetDataDir(), code)
 		passwordProtected := metaErr == nil && metadata.IsPasswordProtected(&meta)
 
+		message := ""
+		if metaErr == nil {
+			message = meta.Message
+		}
+
 		if passwordProtected && !metadata.CheckPassword(&meta, r.Header.Get("X-Flick-Password")) {
 			var total int64
 			for _, entry := range entries {
@@ -86,6 +92,7 @@ func DownloadInfoHandler() http.HandlerFunc {
 			resp := downloadInfoResponse{
 				PasswordProtected: true,
 				Encrypted:         metaErr == nil && meta.Encrypted,
+				Message:           message,
 				Items:             []downloadInfoItem{{Name: "password protected content", FileCount: 1, Size: total}},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -109,6 +116,7 @@ func DownloadInfoHandler() http.HandlerFunc {
 
 			resp := downloadInfoResponse{
 				Encrypted: true,
+				Message:   message,
 				Items:     []downloadInfoItem{{Name: "encrypted content", FileCount: 1, Size: total}},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -160,6 +168,7 @@ func DownloadInfoHandler() http.HandlerFunc {
 			reader.Close()
 		}
 
+		resp.Message = message
 		for _, name := range order {
 			resp.Items = append(resp.Items, *byTop[name])
 		}

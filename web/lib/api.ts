@@ -156,6 +156,16 @@ export interface Upload {
 // randomArchiveName: the name under which the whole upload is stored and later
 // handed back on download. A random uuid keeps unrelated uploads from colliding
 // on disk and is exactly what the receiver saves (e.g. "<uuid>.zip").
+// encodeMessageHeader: Base64-encode the UTF-8 bytes of a personal message so it
+// can travel in the X-Flick-Message header, which only accepts ASCII. The Go
+// server decodes it back before storing it in the code's metadata.
+function encodeMessageHeader(message: string): string {
+  const bytes = new TextEncoder().encode(message)
+  let binary = ""
+  for (const byte of bytes) binary += String.fromCharCode(byte)
+  return btoa(binary)
+}
+
 function randomArchiveName(): string {
   const id =
     typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
@@ -170,7 +180,8 @@ export async function uploadFile(
   maxDownloadCount: number,
   onProgress?: (progress: UploadProgress) => void,
   signal?: AbortSignal,
-  password?: string
+  password?: string,
+  message?: string
 ): Promise<string> {
   const url = apiUrl("/upload")
   url.searchParams.set("expiration", expiration)
@@ -237,6 +248,9 @@ export async function uploadFile(
     xhr.setRequestHeader("X-Flick-Checksum", archiveChecksum)
     // An empty password leaves the code public; the server treats it as unset.
     if (password) xhr.setRequestHeader("X-Flick-Password", password)
+    // Optional personal note surfaced to the downloader on the receive page.
+    // Base64 of the UTF-8 bytes keeps the header ASCII-safe for any text.
+    if (message) xhr.setRequestHeader("X-Flick-Message", encodeMessageHeader(message))
 
     xhr.upload.addEventListener("progress", (event) => {
       if (event.lengthComputable && onProgress) {
@@ -340,6 +354,9 @@ export interface DownloadInfo {
   // supplied yet, so items is a placeholder and the real listing stays withheld.
   // The receive page prompts for the password and sends it on the download.
   passwordProtected: boolean
+  // Optional personal note the uploader attached, shown to the downloader. Empty
+  // when no message was set.
+  message: string
 }
 
 // fetchDownloadInfo: List the items behind a code WITHOUT consuming a download.
@@ -365,11 +382,13 @@ export async function fetchDownloadInfo(
     items?: DownloadInfoItem[]
     encrypted?: boolean
     passwordProtected?: boolean
+    message?: string
   }
   return {
     items: data.items ?? [],
     encrypted: data.encrypted === true,
     passwordProtected: data.passwordProtected === true,
+    message: typeof data.message === "string" ? data.message : "",
   }
 }
 
