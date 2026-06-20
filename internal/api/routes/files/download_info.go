@@ -31,8 +31,9 @@ type downloadInfoItem struct {
 
 // downloadInfoResponse: the listing returned by the info endpoint.
 type downloadInfoResponse struct {
-	Items     []downloadInfoItem `json:"items"`
-	Encrypted bool               `json:"encrypted,omitempty"`
+	Items             []downloadInfoItem `json:"items"`
+	Encrypted         bool               `json:"encrypted,omitempty"`
+	PasswordProtected bool               `json:"passwordProtected,omitempty"`
 }
 
 // DownloadInfoHandler: List the files behind a code without consuming a download.
@@ -68,8 +69,34 @@ func DownloadInfoHandler() http.HandlerFunc {
 			return
 		}
 
+		meta, metaErr := metadata.LoadMetadata(path.GetDataDir(), code)
+		passwordProtected := metaErr == nil && metadata.IsPasswordProtected(&meta)
+
+		if passwordProtected && !metadata.CheckPassword(&meta, r.Header.Get("X-Flick-Password")) {
+			var total int64
+			for _, entry := range entries {
+				if entry.Name() == metadataFilename {
+					continue
+				}
+				if info, err := entry.Info(); err == nil {
+					total += info.Size()
+				}
+			}
+
+			resp := downloadInfoResponse{
+				PasswordProtected: true,
+				Encrypted:         metaErr == nil && meta.Encrypted,
+				Items:             []downloadInfoItem{{Name: "password protected content", FileCount: 1, Size: total}},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				logging.LogInfoError("Cannot encode info response for code %q: %v", code, err)
+			}
+			return
+		}
+
 		// Check if this is encrypted or not
-		if meta, err := metadata.LoadMetadata(path.GetDataDir(), code); err == nil && meta.Encrypted {
+		if metaErr == nil && meta.Encrypted {
 			var total int64
 			for _, entry := range entries {
 				if entry.Name() == metadataFilename {

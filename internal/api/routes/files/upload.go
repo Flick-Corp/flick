@@ -123,6 +123,12 @@ func UploadFileHandler(queries *database.Queries) http.HandlerFunc {
 			return
 		}
 
+		if !metadata.SetPassword(m, r.Header.Get("X-Flick-Password")) {
+			routes.WriteError(w, http.StatusBadRequest, "Invalid password")
+			return
+		}
+
+		// No error check on this one.
 		metadata.SetEncrypted(m, r.Header.Get("X-Flick-Encrypted") == "true")
 
 		// Generate a code until we found one correct.

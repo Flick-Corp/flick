@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type For
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
@@ -110,6 +111,8 @@ export default function SendPage() {
   const [maxDownloadCount, setMaxDownloadCount] = useState<number>(1)
   const [maxDownloadLimit, setMaxDownloadLimit] = useState<number>(1)
   const [allowMultipleDownloads, setAllowMultipleDownloads] = useState<boolean>(false)
+  const [passwordEnabled, setPasswordEnabled] = useState(false)
+  const [password, setPassword] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [progress, setProgress] = useState<{ name: string; percent: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -216,9 +219,16 @@ export default function SendPage() {
       const uploads = items.map((item) => ({ name: item.name, isFolder: item.isFolder, entries: item.entries }))
       const label = items.length === 1 ? items[0].name : t("batchLabel", { count: items.length })
 
-      const code = await uploadFile(uploads, expiration, maxDownloadCount, ({ loaded, total }) => {
-        setProgress({ name: label, percent: Math.round((loaded / total) * 100) })
-      })
+      const code = await uploadFile(
+        uploads,
+        expiration,
+        maxDownloadCount,
+        ({ loaded, total }) => {
+          setProgress({ name: label, percent: Math.round((loaded / total) * 100) })
+        },
+        undefined,
+        passwordEnabled ? password : undefined
+      )
 
       const params = new URLSearchParams()
       params.set("code", code)
@@ -239,7 +249,9 @@ export default function SendPage() {
     { value: "4h", label: t("expiration4h") },
   ]
 
-  const canSubmit = items.length > 0 && !submitting
+  // When password protection is on, an empty password would silently produce a
+  // public code, so block submission until one is typed.
+  const canSubmit = items.length > 0 && !submitting && (!passwordEnabled || password.trim().length > 0)
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col items-center px-6 py-16">
@@ -390,19 +402,30 @@ export default function SendPage() {
             </div>
           )}
 
-          <div className="flex flex-col gap-3 opacity-60">
+          <div className="flex flex-col gap-3">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-foreground">{t("passwordTitle")}</p>
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-                    {t("comingSoon")}
-                  </span>
-                </div>
+                <p className="text-sm font-semibold text-foreground">{t("passwordTitle")}</p>
                 <p className="text-sm text-muted-foreground">{t("passwordDescription")}</p>
               </div>
-              <Switch checked={false} disabled aria-disabled />
+              <Switch
+                checked={passwordEnabled}
+                onCheckedChange={(checked) => {
+                  setPasswordEnabled(checked)
+                  if (!checked) setPassword("")
+                }}
+                aria-label={t("passwordTitle")}
+              />
             </div>
+            {passwordEnabled && (
+              <Input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder={t("passwordPlaceholder")}
+                autoComplete="new-password"
+              />
+            )}
           </div>
 
           <div className="flex flex-col gap-2 opacity-60">

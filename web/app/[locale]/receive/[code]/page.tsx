@@ -1,16 +1,18 @@
 "use client"
 
-import { ChevronLeft, Download, FileText, Folder, Loader2, Lock } from "lucide-react"
+import { ChevronLeft, Download, FileText, Folder, KeyRound, Loader2, Lock } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { use, useEffect, useState } from "react"
+import { use, useEffect, useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import {
   CodeNotFoundError,
   type DownloadInfo,
   downloadByCode,
   fetchDownloadInfo,
+  PasswordRequiredError,
   triggerBlobDownload,
 } from "@/lib/api"
 import { Link } from "@/i18n/navigation"
@@ -100,25 +102,40 @@ export default function ReceiveCodePage({ params }: { params: Promise<{ code: st
 function ReadyView({ info, code }: { info: DownloadInfo; code: string }) {
   const t = useTranslations("ReceiveCode")
   const [busy, setBusy] = useState(false)
+  const [password, setPassword] = useState("")
+  const [wrongPassword, setWrongPassword] = useState(false)
   const items = info.items
 
   // ONE click = ONE GET = ONE consumed download. The server returns a multipart
-  // body; each part is the stored <uuid>.zip, which we save as-is.
+  // body; each part is the stored <uuid>.zip, which we save as-is. The password
+  // (when the code is protected) gates the request; a wrong one is rejected with
+  // 401 before the single-use download is consumed.
   async function downloadAll() {
     if (busy) return
+    if (info.passwordProtected && password.trim().length === 0) return
     setBusy(true)
+    setWrongPassword(false)
     try {
-      const archives = await downloadByCode(code)
+      const archives = await downloadByCode(code, undefined, info.passwordProtected ? password : undefined)
       for (const archive of archives) triggerBlobDownload(archive.blob, archive.name)
     } catch (err) {
-      console.error(err)
+      if (err instanceof PasswordRequiredError) {
+        setWrongPassword(true)
+      } else {
+        console.error(err)
+      }
     } finally {
       setBusy(false)
     }
   }
 
+  function handleDownload(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    downloadAll()
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <form onSubmit={handleDownload} className="flex flex-col gap-4">
       <Card className="p-2">
         <ul className="flex flex-col">
           {items.map((item) => (
@@ -126,6 +143,8 @@ function ReadyView({ info, code }: { info: DownloadInfo; code: string }) {
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
                 {info.encrypted ? (
                   <Lock className="h-4 w-4" />
+                ) : info.passwordProtected ? (
+                  <KeyRound className="h-4 w-4" />
                 ) : item.isFolder ? (
                   <Folder className="h-4 w-4" />
                 ) : (
@@ -133,7 +152,9 @@ function ReadyView({ info, code }: { info: DownloadInfo; code: string }) {
                 )}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{info.encrypted ? t("encrypted") : item.name}</p>
+                <p className="truncate text-sm font-medium">
+                  {info.encrypted ? t("encrypted") : info.passwordProtected ? t("passwordProtected") : item.name}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {item.isFolder
                     ? `${t("folderFiles", { count: item.fileCount })} · ${formatBytes(item.size)}`
@@ -151,11 +172,34 @@ function ReadyView({ info, code }: { info: DownloadInfo; code: string }) {
           {t("encryptedHint")}
         </p>
       ) : (
-        <Button type="button" size="lg" className="h-12 w-full" disabled={busy} onClick={downloadAll}>
-          {busy ? <Loader2 className="size-5 animate-spin" /> : <Download className="size-5" />}
-          {items.length > 1 ? t("downloadAll") : t("download")}
-        </Button>
+        <>
+          {info.passwordProtected && (
+            <div className="flex flex-col gap-2">
+              <Input
+                type="password"
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value)
+                  setWrongPassword(false)
+                }}
+                placeholder={t("passwordPlaceholder")}
+                autoComplete="off"
+                autoFocus
+              />
+              {wrongPassword && <p className="text-sm text-destructive">{t("wrongPassword")}</p>}
+            </div>
+          )}
+          <Button
+            type="submit"
+            size="lg"
+            className="h-12 w-full"
+            disabled={busy || (info.passwordProtected && password.trim().length === 0)}
+          >
+            {busy ? <Loader2 className="size-5 animate-spin" /> : <Download className="size-5" />}
+            {items.length > 1 ? t("downloadAll") : t("download")}
+          </Button>
+        </>
       )}
-    </div>
+    </form>
   )
 }

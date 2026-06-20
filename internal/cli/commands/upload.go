@@ -227,10 +227,11 @@ func randomArchiveName() string {
 // - exp (string): The expiration of this upload.
 // - mdc (string): The Max Download Count of this upload.
 // - encrypt (bool): Encrypt the archive end-to-end before uploading.
+// - password (string): Protect the download with a password, or empty for none.
 //
 // Returns:
 // - result1 (error): An error if occured.
-func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string, encrypt bool) error {
+func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string, encrypt bool, password string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("Failure: Internal CLI error.")
 	}
@@ -360,10 +361,16 @@ func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string, encryp
 	if keyFragment != "" {
 		req.Header.Set("X-Flick-Encrypted", "true")
 	}
+	if password != "" {
+		req.Header.Set("X-Flick-Password", password)
+	}
 	req.ContentLength = int64(body.Len())
 
 	if err := doUploadRequest(req, exp, keyFragment); err != nil {
 		return err
+	}
+	if password != "" {
+		fmt.Println(utils.BrightGreen + "Password protected: the downloader must enter the password to download." + utils.Reset)
 	}
 	fmt.Println("Code copied to clipboard.")
 	return nil
