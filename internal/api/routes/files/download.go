@@ -112,6 +112,16 @@ func DownloadFileHandler() http.HandlerFunc {
 			return
 		}
 
+		meta, metaErr := metadata.LoadMetadata(path.GetDataDir(), code)
+		if metaErr != nil {
+			logging.LogInfoError("Cannot load metadata for code %q: %v", code, metaErr)
+		}
+
+		if metaErr == nil && !metadata.CheckPassword(&meta, r.Header.Get("X-Flick-Password")) {
+			routes.WriteError(w, http.StatusUnauthorized, "Invalid or missing password")
+			return
+		}
+
 		codePath := path.GetDataDir() + code
 		entries, err := os.ReadDir(codePath)
 		if err != nil {
@@ -142,12 +152,8 @@ func DownloadFileHandler() http.HandlerFunc {
 		w.Header().Set("Content-Type", writer.FormDataContentType())
 		w.Header().Set("X-Total-Size", strconv.FormatInt(totalSize, 10))
 
-		if meta, err := metadata.LoadMetadata(path.GetDataDir(), code); err == nil {
-			if meta.Checksum != "" {
-				w.Header().Set("X-Flick-Checksum", meta.Checksum)
-			}
-		} else {
-			logging.LogInfoError("Cannot load metadata for code %q to send checksum: %v", code, err)
+		if metaErr == nil && meta.Checksum != "" {
+			w.Header().Set("X-Flick-Checksum", meta.Checksum)
 		}
 
 		err = doDownloadMultipartForm(writer, filteredEntries, codePath)

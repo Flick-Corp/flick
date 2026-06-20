@@ -50,6 +50,15 @@ export class ChecksumMismatchError extends Error {
   }
 }
 
+// Thrown when a download is refused because the supplied password is missing or
+// wrong (HTTP 401). The receive page catches it to (re-)prompt for the password.
+export class PasswordRequiredError extends Error {
+  constructor(public code: string) {
+    super(`Password required for code: ${code}`)
+    this.name = "PasswordRequiredError"
+  }
+}
+
 // Error message the API returns (HTTP 403, body { "error": "Account blocked" })
 // on any authenticated endpoint when the account has been blocked by an admin.
 export const ACCOUNT_BLOCKED_CODE = "Account blocked"
@@ -160,7 +169,8 @@ export async function uploadFile(
   expiration: string,
   maxDownloadCount: number,
   onProgress?: (progress: UploadProgress) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  password?: string
 ): Promise<string> {
   const url = apiUrl("/upload")
   url.searchParams.set("expiration", expiration)
@@ -225,6 +235,8 @@ export async function uploadFile(
     xhr.open("POST", url.toString())
     xhr.setRequestHeader("X-Flick-User-ID", uploaderId)
     xhr.setRequestHeader("X-Flick-Checksum", archiveChecksum)
+    // An empty password leaves the code public; the server treats it as unset.
+    if (password) xhr.setRequestHeader("X-Flick-Password", password)
 
     xhr.upload.addEventListener("progress", (event) => {
       if (event.lengthComputable && onProgress) {
@@ -258,13 +270,21 @@ export interface DownloadedArchive {
 // the single-use download). The server replies with a multipart/form-data body
 // (the same shape the CLI reads): each "file" part is a stored zip, returned
 // untouched so the caller saves it.
-export async function downloadByCode(code: string, signal?: AbortSignal): Promise<DownloadedArchive[]> {
+export async function downloadByCode(
+  code: string,
+  signal?: AbortSignal,
+  password?: string
+): Promise<DownloadedArchive[]> {
   const url = apiUrl("/download")
   url.searchParams.set("code", code)
 
-  const res = await fetch(url.toString(), { method: "GET", signal })
+  const headers: HeadersInit = {}
+  if (password) headers["X-Flick-Password"] = password
+
+  const res = await fetch(url.toString(), { method: "GET", signal, headers })
 
   if (res.status === 404) throw new CodeNotFoundError(code)
+  if (res.status === 401) throw new PasswordRequiredError(code)
   if (!res.ok) throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
 
   // The server announces the stored archive's BLAKE3 digest. Older uploads
@@ -316,22 +336,41 @@ export interface DownloadInfo {
   // True when the upload is end-to-end encrypted. The browser has no key and no
   // way to decrypt, so the receive page blocks the download and points to the CLI.
   encrypted: boolean
+  // True while the code is locked: a password guards it and none has been
+  // supplied yet, so items is a placeholder and the real listing stays withheld.
+  // The receive page prompts for the password and sends it on the download.
+  passwordProtected: boolean
 }
 
 // fetchDownloadInfo: List the items behind a code WITHOUT consuming a download.
 // The receive page uses this on load so merely opening the page never burns the
 // single-use code; the real (consuming) transfer happens later via downloadByCode.
-export async function fetchDownloadInfo(code: string, signal?: AbortSignal): Promise<DownloadInfo> {
+export async function fetchDownloadInfo(
+  code: string,
+  signal?: AbortSignal,
+  password?: string
+): Promise<DownloadInfo> {
   const url = apiUrl("/download/info")
   url.searchParams.set("code", code)
 
-  const res = await fetch(url.toString(), { method: "GET", signal })
+  const headers: HeadersInit = {}
+  if (password) headers["X-Flick-Password"] = password
+
+  const res = await fetch(url.toString(), { method: "GET", signal, headers })
 
   if (res.status === 404) throw new CodeNotFoundError(code)
   if (!res.ok) throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
 
-  const data = (await res.json()) as { items?: DownloadInfoItem[]; encrypted?: boolean }
-  return { items: data.items ?? [], encrypted: data.encrypted === true }
+  const data = (await res.json()) as {
+    items?: DownloadInfoItem[]
+    encrypted?: boolean
+    passwordProtected?: boolean
+  }
+  return {
+    items: data.items ?? [],
+    encrypted: data.encrypted === true,
+    passwordProtected: data.passwordProtected === true,
+  }
 }
 
 export async function loadUserConfiguration(

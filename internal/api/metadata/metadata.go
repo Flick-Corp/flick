@@ -8,9 +8,14 @@
 package metadata
 
 import (
+	"crypto/rand"
+	"crypto/subtle"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/matteoepitech/flick/internal/api/logging"
@@ -18,6 +23,17 @@ import (
 	"github.com/matteoepitech/flick/internal/api/utils"
 	"github.com/matteoepitech/flick/internal/api/utils/data"
 	"github.com/matteoepitech/flick/internal/utils/checksum"
+	"golang.org/x/crypto/argon2"
+)
+
+// Argon2id parameters for the share-code password, mirroring the account
+// password hashing so stored "salt$hash" values stay consistent across Flick.
+const (
+	pwArgonTime    uint32 = 1
+	pwArgonMemory  uint32 = 64 * 1024
+	pwArgonThreads uint8  = 4
+	pwArgonKeyLen  uint32 = 32
+	pwSaltLen      int    = 16
 )
 
 // struct used for the JSON template
@@ -28,6 +44,7 @@ type Metadata struct {
 	UploaderID           string `json:"uploader_id,omitempty"`
 	Checksum             string `json:"checksum,omitempty"`
 	Encrypted            bool   `json:"encrypted,omitempty"`
+	PasswordHash         string `json:"password_hash,omitempty"`
 }
 
 // LoadMetadata: Read and decode the metadata file of a given code.
@@ -180,6 +197,73 @@ func SetChecksum(metadata *Metadata, sum string) bool {
 // - encrypted (bool): True when the client encrypted the archive before upload.
 func SetEncrypted(metadata *Metadata, encrypted bool) {
 	metadata.Encrypted = encrypted
+}
+
+// SetPassword: Protect the code with a download password. The plaintext password
+// is hashed with Argon2id and only the "salt$hash" is stored, so the server
+// never keeps the password itself. An empty password leaves the code public.
+//
+// Params:
+// - metadata (*Metadata): The metadata to modify.
+// - password (string): The plaintext password chosen by the uploader, or empty.
+func SetPassword(metadata *Metadata, password string) bool {
+	if password == "" {
+		return true
+	}
+
+	salt := make([]byte, pwSaltLen)
+	if _, err := rand.Read(salt); err != nil {
+		logging.LogInfoError("Cannot generate password salt: %v", err)
+		return false
+	}
+	hash := argon2.IDKey([]byte(password), salt, pwArgonTime, pwArgonMemory, pwArgonThreads, pwArgonKeyLen)
+	metadata.PasswordHash = fmt.Sprintf("%s$%s",
+		base64.RawStdEncoding.EncodeToString(salt),
+		base64.RawStdEncoding.EncodeToString(hash))
+	return true
+}
+
+// IsPasswordProtected: Report whether a download password guards this code.
+//
+// Params:
+// - metadata (*Metadata): The metadata to inspect.
+//
+// Returns:
+// - result1 (bool): True when a password must be supplied to download.
+func IsPasswordProtected(metadata *Metadata) bool {
+	return metadata.PasswordHash != ""
+}
+
+// CheckPassword: Verify a candidate password against the stored Argon2id hash. A
+// code with no password always passes, so callers can use this as the single
+// access gate regardless of whether protection is enabled.
+//
+// Params:
+// - metadata (*Metadata): The metadata holding the stored hash.
+// - password (string): The candidate password supplied by the downloader.
+//
+// Returns:
+// - result1 (bool): True when access is granted.
+func CheckPassword(metadata *Metadata, password string) bool {
+	if metadata.PasswordHash == "" {
+		return true
+	}
+
+	parts := strings.Split(metadata.PasswordHash, "$")
+	if len(parts) != 2 {
+		return false
+	}
+	salt, err := base64.RawStdEncoding.DecodeString(parts[0])
+	if err != nil {
+		return false
+	}
+	expected, err := base64.RawStdEncoding.DecodeString(parts[1])
+	if err != nil {
+		return false
+	}
+
+	hash := argon2.IDKey([]byte(password), salt, pwArgonTime, pwArgonMemory, pwArgonThreads, pwArgonKeyLen)
+	return subtle.ConstantTimeCompare(hash, expected) == 1
 }
 
 // CheckExpirationToRemove: Will check and remove every expired files/folders.

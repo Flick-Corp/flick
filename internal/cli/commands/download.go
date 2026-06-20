@@ -29,6 +29,7 @@ import (
 	"github.com/matteoepitech/flick/internal/utils/encryption"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 // downloadInfoItem: one item behind a code.
@@ -41,8 +42,9 @@ type downloadInfoItem struct {
 
 // downloadInfoResponse: the listing returned by the /download/info endpoint.
 type downloadInfoResponse struct {
-	Items     []downloadInfoItem `json:"items"`
-	Encrypted bool               `json:"encrypted"`
+	Items             []downloadInfoItem `json:"items"`
+	Encrypted         bool               `json:"encrypted"`
+	PasswordProtected bool               `json:"passwordProtected"`
 }
 
 // doDownloadRequest: Do the download request on the server.
@@ -281,19 +283,26 @@ func humanSize(bytes int64) string {
 }
 
 // fetchDownloadInfo: List what is behind a code without consuming the download.
+// When the code is password protected, the listing is only revealed if password
+// is the correct one; an empty or wrong password yields a placeholder listing
+// with PasswordProtected set.
 //
 // Params:
 // - code (string): The code to inspect.
+// - password (string): The download password, or empty when none is known yet.
 //
 // Returns:
 // - result1 (downloadInfoResponse): The listing behind the code.
 // - result2 (error): An error if occured.
-func fetchDownloadInfo(code string) (downloadInfoResponse, error) {
+func fetchDownloadInfo(code string, password string) (downloadInfoResponse, error) {
 	var info downloadInfoResponse
 
 	req, err := http.NewRequest("GET", config.Conf.APIBaseURL()+"/download/info?code="+code, nil)
 	if err != nil {
 		return info, fmt.Errorf("Failure: Cannot create the request for the server.")
+	}
+	if password != "" {
+		req.Header.Set("X-Flick-Password", password)
 	}
 
 	resp, err := network.SharedClient.Do(req)
@@ -357,10 +366,26 @@ func RunDownload(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Printf("Searching the code %s...\n", code)
 
-	info, err := fetchDownloadInfo(code)
+	info, err := fetchDownloadInfo(code, "")
 	if err != nil {
 		return err
 	}
+
+	var password string
+	if info.PasswordProtected {
+		password, err = promptPassword()
+		if err != nil {
+			return err
+		}
+		info, err = fetchDownloadInfo(code, password)
+		if err != nil {
+			return err
+		}
+		if info.PasswordProtected {
+			return fmt.Errorf("Failure: Wrong password for this code.")
+		}
+	}
+
 	if info.Encrypted && !hasKey {
 		return fmt.Errorf("Failure: This Flick is end-to-end encrypted. Use the full code including the part after #.")
 	}
@@ -381,8 +406,35 @@ func RunDownload(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("Failure: Cannot create the request for the server.")
 	}
+	if password != "" {
+		req.Header.Set("X-Flick-Password", password)
+	}
 
 	return doDownloadRequest(req, key, info.Encrypted)
+}
+
+// promptPassword: Read a download password from the terminal without echoing it.
+// Falls back to a plain (visible) read when stdin is not a terminal, e.g. piped.
+//
+// Returns:
+// - result1 (string): The entered password.
+// - result2 (error): An error if reading failed.
+func promptPassword() (string, error) {
+	fmt.Printf("This code is password protected. Enter the password: ")
+
+	fd := int(os.Stdin.Fd())
+	if term.IsTerminal(fd) {
+		raw, err := term.ReadPassword(fd)
+		fmt.Println()
+		if err != nil {
+			return "", fmt.Errorf("Failure: Cannot read the password: %w", err)
+		}
+		return strings.TrimSpace(string(raw)), nil
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	line, _ := reader.ReadString('\n')
+	return strings.TrimSpace(line), nil
 }
 
 // splitCode: Separate a share code from its optional decryption key. A code of
