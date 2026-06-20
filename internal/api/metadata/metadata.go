@@ -45,7 +45,11 @@ type Metadata struct {
 	Checksum             string `json:"checksum,omitempty"`
 	Encrypted            bool   `json:"encrypted,omitempty"`
 	PasswordHash         string `json:"password_hash,omitempty"`
+	Message              string `json:"message,omitempty"`
 }
+
+// maxMessageLen for the message of the code.
+const maxMessageLen int = 500
 
 // LoadMetadata: Read and decode the metadata file of a given code.
 //
@@ -186,6 +190,26 @@ func SetChecksum(metadata *Metadata, sum string) bool {
 	}
 
 	metadata.Checksum = sum
+	return true
+}
+
+// SetMessage: Attach an optional personal note the uploader wants the downloader
+// to see.
+//
+// Params:
+// - metadata (*Metadata): The metadata to modify.
+// - message (string): The note chosen by the uploader, or empty for none.
+//
+// Returns:
+// - result1 (bool): Return true if the message is acceptable, else false.
+func SetMessage(metadata *Metadata, message string) bool {
+	message = strings.TrimSpace(message)
+	if len(message) > maxMessageLen {
+		logging.LogInfoError("Message is too long (%d > %d)", len(message), maxMessageLen)
+		return false
+	}
+
+	metadata.Message = message
 	return true
 }
 

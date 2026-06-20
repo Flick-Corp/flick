@@ -113,6 +113,7 @@ export default function SendPage() {
   const [allowMultipleDownloads, setAllowMultipleDownloads] = useState<boolean>(false)
   const [passwordEnabled, setPasswordEnabled] = useState(false)
   const [password, setPassword] = useState("")
+  const [message, setMessage] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [progress, setProgress] = useState<{ name: string; percent: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -227,7 +228,8 @@ export default function SendPage() {
           setProgress({ name: label, percent: Math.round((loaded / total) * 100) })
         },
         undefined,
-        passwordEnabled ? password : undefined
+        passwordEnabled ? password : undefined,
+        message.trim() ? message.trim() : undefined
       )
 
       const params = new URLSearchParams()
@@ -428,16 +430,21 @@ export default function SendPage() {
             )}
           </div>
 
-          <div className="flex flex-col gap-2 opacity-60">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
               <Label htmlFor="message" className="text-sm font-semibold text-foreground">
                 {t("messageLabel")}
               </Label>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-                {t("comingSoon")}
-              </span>
+              <span className="text-xs text-muted-foreground tabular-nums">{message.length}/500</span>
             </div>
-            <Textarea id="message" value="" disabled placeholder={t("messagePlaceholder")} rows={4} />
+            <Textarea
+              id="message"
+              value={message}
+              onChange={(event) => setMessage(event.target.value.slice(0, 500))}
+              maxLength={500}
+              placeholder={t("messagePlaceholder")}
+              rows={4}
+            />
           </div>
         </Card>
 
