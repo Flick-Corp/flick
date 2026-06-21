@@ -14,11 +14,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	codepkg "github.com/matteoepitech/flick/internal/api/code"
+	"github.com/matteoepitech/flick/internal/api/database"
 	"github.com/matteoepitech/flick/internal/api/logging"
 	"github.com/matteoepitech/flick/internal/api/metadata"
 	"github.com/matteoepitech/flick/internal/api/path"
 	"github.com/matteoepitech/flick/internal/api/routes"
+	"github.com/matteoepitech/flick/internal/api/routes/account"
 )
 
 // downloadInfoItem: one item behind a code.
@@ -39,9 +42,13 @@ type downloadInfoResponse struct {
 
 // DownloadInfoHandler: List the files behind a code without consuming a download.
 //
+// Params:
+//   - queries (*database.Queries): The database queries, used to authorize a
+//     member when the code is bound to a group.
+//
 // Returns:
 // - http.HandlerFunc: The handler function.
-func DownloadInfoHandler() http.HandlerFunc {
+func DownloadInfoHandler(queries *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			routes.WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -71,6 +78,19 @@ func DownloadInfoHandler() http.HandlerFunc {
 		}
 
 		meta, metaErr := metadata.LoadMetadata(path.GetDataDir(), code)
+
+		if metaErr == nil && metadata.IsGroupBound(&meta) {
+			var groupID pgtype.UUID
+			if err := groupID.Scan(meta.GroupID); err != nil {
+				routes.WriteError(w, http.StatusNotFound, "Code not found")
+				return
+			}
+			if _, _, err := account.RequireGroupMember(r.Context(), queries, account.TokenFromHeader(r), groupID); err != nil {
+				routes.WriteError(w, http.StatusNotFound, "Code not found")
+				return
+			}
+		}
+
 		passwordProtected := metaErr == nil && metadata.IsPasswordProtected(&meta)
 
 		message := ""

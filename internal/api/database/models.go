@@ -160,6 +160,23 @@ type Group struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type GroupFolder struct {
+	ID        pgtype.UUID        `json:"id"`
+	GroupID   pgtype.UUID        `json:"group_id"`
+	ParentID  pgtype.UUID        `json:"parent_id"`
+	Name      string             `json:"name"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type GroupUpload struct {
+	ID         pgtype.UUID        `json:"id"`
+	GroupID    pgtype.UUID        `json:"group_id"`
+	FolderID   pgtype.UUID        `json:"folder_id"`
+	Code       string             `json:"code"`
+	UploaderID pgtype.UUID        `json:"uploader_id"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
 type Session struct {
 	Token     string             `json:"token"`
 	UserID    pgtype.UUID        `json:"user_id"`

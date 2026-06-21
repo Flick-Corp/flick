@@ -174,27 +174,11 @@ function randomArchiveName(): string {
   return `${id}.zip`
 }
 
-export async function uploadFile(
-  items: Upload[],
-  expiration: string,
-  maxDownloadCount: number,
-  onProgress?: (progress: UploadProgress) => void,
-  signal?: AbortSignal,
-  password?: string,
-  message?: string
-): Promise<string> {
-  const url = apiUrl("/upload")
-  url.searchParams.set("expiration", expiration)
-  url.searchParams.set("maxDownloadCount", String(maxDownloadCount))
-
-  // The server requires a known uploader (X-Flick-User-ID), exactly like the CLI.
-  const uploaderId = await ensureUploaderId(signal)
-
-  // Everything the user staged goes into ONE archive, stored and served as-is:
-  // the download just hands this single zip back (no client unzip/rezip) and the
-  // info endpoint reads inside it to list each item. A loose file sits at the
-  // archive root; a folder keeps its full structure. The archive name is a random
-  // uuid, so two unrelated uploads can never collide on disk.
+// buildUploadArchive: Pack everything the user staged into ONE zip and checksum
+// the exact bytes. A loose file sits at the archive root; a folder keeps its full
+// structure. Top-level names are de-duplicated so two staged items never collide.
+// Shared by the public upload and group uploads.
+async function buildUploadArchive(items: Upload[]): Promise<{ archive: Blob; checksum: string }> {
   const zip = new JSZip()
   const usedTop = new Set<string>()
 
@@ -233,10 +217,31 @@ export async function uploadFile(
 
   const archive = await zip.generateAsync({ type: "blob", compression: "DEFLATE" })
 
-  // Checksum the exact archive bytes we are about to upload; the server stores
-  // this digest and hands it back on download so the downloader can confirm the
-  // transfer is intact. Identical to the CLI and Go server (BLAKE3 hex).
-  const archiveChecksum = await hashBlob(archive)
+  // Checksum the exact archive bytes; the server stores this digest and hands it
+  // back on download so the downloader can confirm the transfer is intact
+  // (BLAKE3 hex, identical to the CLI and Go server).
+  const checksum = await hashBlob(archive)
+
+  return { archive, checksum }
+}
+
+export async function uploadFile(
+  items: Upload[],
+  expiration: string,
+  maxDownloadCount: number,
+  onProgress?: (progress: UploadProgress) => void,
+  signal?: AbortSignal,
+  password?: string,
+  message?: string
+): Promise<string> {
+  const url = apiUrl("/upload")
+  url.searchParams.set("expiration", expiration)
+  url.searchParams.set("maxDownloadCount", String(maxDownloadCount))
+
+  // The server requires a known uploader (X-Flick-User-ID), exactly like the CLI.
+  const uploaderId = await ensureUploaderId(signal)
+
+  const { archive, checksum: archiveChecksum } = await buildUploadArchive(items)
 
   const form = new FormData()
   form.append("file", archive, randomArchiveName())
@@ -362,11 +367,7 @@ export interface DownloadInfo {
 // fetchDownloadInfo: List the items behind a code WITHOUT consuming a download.
 // The receive page uses this on load so merely opening the page never burns the
 // single-use code; the real (consuming) transfer happens later via downloadByCode.
-export async function fetchDownloadInfo(
-  code: string,
-  signal?: AbortSignal,
-  password?: string
-): Promise<DownloadInfo> {
+export async function fetchDownloadInfo(code: string, signal?: AbortSignal, password?: string): Promise<DownloadInfo> {
   const url = apiUrl("/download/info")
   url.searchParams.set("code", code)
 
@@ -1004,4 +1005,236 @@ export async function searchUsers(token: string, q: string, signal?: AbortSignal
       email: typeof obj.email === "string" ? obj.email : "",
     }
   })
+}
+
+// A file transfer shared with a group. The code is included so members fetch
+// contents and download through the native endpoints, which enforce membership
+// for group-bound codes.
+export interface GroupUpload {
+  id: string
+  code: string
+  uploader: string
+  createdAt?: string
+}
+
+// toGroupUpload: Maps a raw API group upload (snake_case) to GroupUpload.
+function toGroupUpload(raw: unknown): GroupUpload {
+  const obj = (raw ?? {}) as Record<string, unknown>
+  return {
+    id: typeof obj.id === "string" ? obj.id : "",
+    code: typeof obj.code === "string" ? obj.code : "",
+    uploader: typeof obj.uploader === "string" ? obj.uploader : "",
+    createdAt: typeof obj.created_at === "string" ? obj.created_at : undefined,
+  }
+}
+
+// A sub-folder inside a group's folder tree.
+export interface GroupFolder {
+  id: string
+  name: string
+}
+
+// The contents of one folder level: its sub-folders and the transfers it holds.
+export interface GroupExplore {
+  folders: GroupFolder[]
+  uploads: GroupUpload[]
+}
+
+// exploreGroup: List the sub-folders and transfers at a level of the group's
+// folder tree (the root when folderId is omitted). Allowed for a global admin or
+// any member of the group.
+export async function exploreGroup(
+  token: string,
+  groupId: string,
+  folderId?: string,
+  signal?: AbortSignal
+): Promise<GroupExplore> {
+  const url = apiUrl(`/admin/groups/${groupId}/explore`)
+  if (folderId) url.searchParams.set("folder", folderId)
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+    signal,
+  })
+  if (!res.ok) {
+    throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
+  }
+
+  const data = (await res.json()) as { folders?: unknown; uploads?: unknown }
+  return {
+    folders: Array.isArray(data.folders)
+      ? data.folders.map((raw) => {
+          const obj = (raw ?? {}) as Record<string, unknown>
+          return { id: typeof obj.id === "string" ? obj.id : "", name: typeof obj.name === "string" ? obj.name : "" }
+        })
+      : [],
+    uploads: Array.isArray(data.uploads) ? data.uploads.map(toGroupUpload) : [],
+  }
+}
+
+// createGroupFolder: Create a folder in the group (maintainer/owner only). An
+// omitted parentId creates it at the group root.
+export async function createGroupFolder(
+  token: string,
+  groupId: string,
+  name: string,
+  parentId?: string,
+  signal?: AbortSignal
+): Promise<GroupFolder> {
+  const url = apiUrl(`/admin/groups/${groupId}/folders`)
+
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name, parent_id: parentId ?? "" }),
+    signal,
+  })
+  if (!res.ok) {
+    throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
+  }
+
+  const obj = (await res.json()) as Record<string, unknown>
+  return { id: typeof obj.id === "string" ? obj.id : "", name: typeof obj.name === "string" ? obj.name : "" }
+}
+
+// deleteGroupFolder: Delete a folder and its contents (maintainer/owner only).
+export async function deleteGroupFolder(
+  token: string,
+  groupId: string,
+  folderId: string,
+  signal?: AbortSignal
+): Promise<void> {
+  const url = apiUrl(`/admin/groups/${groupId}/folders/${folderId}`)
+
+  const res = await fetch(url.toString(), {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+    signal,
+  })
+  if (!res.ok) {
+    throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
+  }
+}
+
+// groupUploadInfo: List a group transfer's contents through the native info
+// endpoint (membership is enforced via the Bearer token for group-bound codes).
+// Lets the explorer show the real file names instead of the share code.
+export async function groupUploadInfo(token: string, code: string, signal?: AbortSignal): Promise<DownloadInfo> {
+  const url = apiUrl("/download/info")
+  url.searchParams.set("code", code)
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+    signal,
+  })
+  if (!res.ok) {
+    throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
+  }
+
+  const data = (await res.json()) as {
+    items?: DownloadInfoItem[]
+    encrypted?: boolean
+    passwordProtected?: boolean
+    message?: string
+  }
+  return {
+    items: data.items ?? [],
+    encrypted: data.encrypted === true,
+    passwordProtected: data.passwordProtected === true,
+    message: typeof data.message === "string" ? data.message : "",
+  }
+}
+
+// uploadToGroup: Share files with a group (maintainer/owner only) through the
+// native upload endpoint bound to the group via `group_id`. The transfer is
+// private to the group and downloadable by every member.
+export async function uploadToGroup(
+  token: string,
+  groupId: string,
+  items: Upload[],
+  expiration: string,
+  folderId?: string,
+  onProgress?: (progress: UploadProgress) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const url = apiUrl("/upload")
+  url.searchParams.set("group_id", groupId)
+  url.searchParams.set("expiration", expiration)
+  if (folderId) url.searchParams.set("folder_id", folderId)
+
+  const { archive, checksum } = await buildUploadArchive(items)
+
+  const form = new FormData()
+  form.append("file", archive, randomArchiveName())
+
+  return new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open("POST", url.toString())
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`)
+    xhr.setRequestHeader("X-Flick-Checksum", checksum)
+
+    xhr.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable && onProgress) {
+        onProgress({ loaded: event.loaded, total: event.total })
+      }
+    })
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve()
+      } else {
+        reject(new ApiError(xhr.status, parseErrorMessage(xhr.responseText, xhr.statusText)))
+      }
+    })
+    xhr.addEventListener("error", () => reject(new ApiError(0, "Network error")))
+    xhr.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")))
+
+    signal?.addEventListener("abort", () => xhr.abort())
+    xhr.send(form)
+  })
+}
+
+// downloadGroupUpload: Fetch a group transfer's archive(s) through the native
+// download endpoint. The code is group-bound, so the server enforces membership
+// (the Bearer token) before serving. Verifies the announced checksum like
+// downloadByCode.
+export async function downloadGroupUpload(
+  token: string,
+  code: string,
+  signal?: AbortSignal
+): Promise<DownloadedArchive[]> {
+  const url = apiUrl("/download")
+  url.searchParams.set("code", code)
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+    signal,
+  })
+  if (!res.ok) {
+    throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
+  }
+
+  const expectedChecksum = res.headers.get("X-Flick-Checksum")
+
+  const form = await res.formData()
+  const archives: DownloadedArchive[] = []
+  for (const value of form.getAll("file")) {
+    if (!(value instanceof File)) continue
+
+    if (expectedChecksum) {
+      const got = await hashBlob(value)
+      if (!equal(got, expectedChecksum)) {
+        throw new ChecksumMismatchError(expectedChecksum, got)
+      }
+    }
+
+    archives.push({ name: value.name, blob: value })
+  }
+  return archives
 }

@@ -77,6 +77,33 @@ CREATE TABLE public.device_authorizations (
 
 
 --
+-- Name: group_folders; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_folders (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    group_id uuid NOT NULL,
+    parent_id uuid,
+    name text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: group_uploads; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_uploads (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    group_id uuid NOT NULL,
+    folder_id uuid,
+    code text NOT NULL,
+    uploader_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: groups; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -160,6 +187,22 @@ ALTER TABLE ONLY public.device_authorizations
 
 
 --
+-- Name: group_folders group_folders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_folders
+    ADD CONSTRAINT group_folders_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: group_uploads group_uploads_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_uploads
+    ADD CONSTRAINT group_uploads_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: groups groups_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -224,6 +267,34 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: group_folders_unique_child; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX group_folders_unique_child ON public.group_folders USING btree (group_id, parent_id, name) WHERE (parent_id IS NOT NULL);
+
+
+--
+-- Name: group_folders_unique_root; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX group_folders_unique_root ON public.group_folders USING btree (group_id, name) WHERE (parent_id IS NULL);
+
+
+--
+-- Name: idx_group_folders_group_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_group_folders_group_id ON public.group_folders USING btree (group_id);
+
+
+--
+-- Name: idx_group_uploads_group_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_group_uploads_group_id ON public.group_uploads USING btree (group_id);
+
+
+--
 -- Name: sessions_expires_at_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -251,6 +322,46 @@ ALTER TABLE ONLY public.device_authorizations
 
 ALTER TABLE ONLY public.device_authorizations
     ADD CONSTRAINT device_authorizations_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: group_folders group_folders_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_folders
+    ADD CONSTRAINT group_folders_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.groups(id) ON DELETE CASCADE;
+
+
+--
+-- Name: group_folders group_folders_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_folders
+    ADD CONSTRAINT group_folders_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.group_folders(id) ON DELETE CASCADE;
+
+
+--
+-- Name: group_uploads group_uploads_folder_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_uploads
+    ADD CONSTRAINT group_uploads_folder_id_fkey FOREIGN KEY (folder_id) REFERENCES public.group_folders(id) ON DELETE CASCADE;
+
+
+--
+-- Name: group_uploads group_uploads_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_uploads
+    ADD CONSTRAINT group_uploads_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.groups(id) ON DELETE CASCADE;
+
+
+--
+-- Name: group_uploads group_uploads_uploader_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_uploads
+    ADD CONSTRAINT group_uploads_uploader_id_fkey FOREIGN KEY (uploader_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --

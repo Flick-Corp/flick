@@ -41,6 +41,29 @@ CREATE TABLE user_groups (
     PRIMARY KEY (user_id, group_id)
 );
 
+CREATE TABLE group_folders (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id    UUID        NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    parent_id   UUID        REFERENCES group_folders(id) ON DELETE CASCADE,
+    name        TEXT        NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_group_folders_group_id ON group_folders (group_id);
+CREATE UNIQUE INDEX group_folders_unique_child ON group_folders (group_id, parent_id, name) WHERE parent_id IS NOT NULL;
+CREATE UNIQUE INDEX group_folders_unique_root ON group_folders (group_id, name) WHERE parent_id IS NULL;
+
+CREATE TABLE group_uploads (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id    UUID        NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    folder_id   UUID        REFERENCES group_folders(id) ON DELETE CASCADE,
+    code        TEXT        NOT NULL,
+    uploader_id UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_group_uploads_group_id ON group_uploads (group_id);
+
 CREATE TABLE sessions (
     token       TEXT PRIMARY KEY,
     user_id     UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -72,6 +95,8 @@ CREATE TABLE device_authorizations (
 
 -- migrate:down
 DROP TABLE anonymous_users;
+DROP TABLE group_uploads;
+DROP TABLE group_folders;
 DROP TABLE user_groups;
 DROP TABLE groups;
 DROP TABLE users;
