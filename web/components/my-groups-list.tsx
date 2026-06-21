@@ -59,8 +59,8 @@ export function MyGroupsList() {
             return (
               <TableRow
                 key={group.id}
-                className={cn(manageable && "cursor-pointer")}
-                onClick={manageable ? () => router.push(`/dashboard/group/${group.id}`) : undefined}
+                className="cursor-pointer"
+                onClick={() => router.push(`/dashboard/group/${group.id}`)}
               >
                 <TableCell className="font-medium">{group.name}</TableCell>
                 <TableCell>
@@ -69,7 +69,7 @@ export function MyGroupsList() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right text-sm text-muted-foreground">
-                  {manageable ? t("manage") : "—"}
+                  {manageable ? t("manage") : t("open")}
                 </TableCell>
               </TableRow>
             )

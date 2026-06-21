@@ -188,3 +188,40 @@ func RequireGroupOwner(ctx context.Context, queries *database.Queries, token str
 
 	return user, http.StatusOK, nil
 }
+
+// RequireGroupMember: Authorizes a token to access a specific group's content
+// (e.g. listing or downloading its shared files). A global admin always passes;
+// otherwise the user only needs to belong to that group, whatever their role.
+//
+// Params:
+// - ctx (context.Context): The request context.
+// - queries (*database.Queries): The database queries.
+// - token (string): The session token to authenticate.
+// - groupID (pgtype.UUID): The group the action targets.
+//
+// Returns:
+// - result1 (database.User): The authenticated member user.
+// - result2 (int): The HTTP status to return when err != nil (0 on success).
+// - result3 (error): A user-facing error, or nil when the user belongs to the group.
+func RequireGroupMember(ctx context.Context, queries *database.Queries, token string, groupID pgtype.UUID) (database.User, int, error) {
+	user, status, err := Authenticate(ctx, queries, token)
+	if err != nil {
+		return database.User{}, status, err
+	}
+
+	if user.Role == database.UserRoleAdmin {
+		return user, http.StatusOK, nil
+	}
+
+	if _, err := queries.GetRoleInGroup(ctx, database.GetRoleInGroupParams{
+		UserID:  user.ID,
+		GroupID: groupID,
+	}); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return database.User{}, http.StatusForbidden, fmt.Errorf("You must belong to this group")
+		}
+		return database.User{}, http.StatusInternalServerError, err
+	}
+
+	return user, http.StatusOK, nil
+}

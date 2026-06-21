@@ -10,94 +10,18 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { ApiError, fetchServerLimits, uploadFile, type UploadEntry } from "@/lib/api"
+import { ApiError, fetchServerLimits, uploadFile } from "@/lib/api"
+import {
+  fileItem,
+  folderItemFromInputFiles,
+  formatBytes,
+  itemsFromDataTransfer,
+  type UploadItem,
+} from "@/lib/upload-staging"
 import { Link, useRouter } from "@/i18n/navigation"
 import { cn } from "@/lib/utils"
 
 type Expiration = "1h" | "2h" | "3h" | "4h"
-
-// UploadItem: one entry in the staging list. A loose file is a single-entry
-// item; a folder keeps every file with its relative path so it can be zipped
-// with its structure intact, just like the CLI.
-interface UploadItem {
-  id: string
-  name: string
-  isFolder: boolean
-  entries: UploadEntry[]
-  size: number
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return "0 o"
-  const units = ["o", "Ko", "Mo", "Go"]
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
-  return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`
-}
-
-let itemCounter = 0
-function nextId(): string {
-  itemCounter += 1
-  return `item-${itemCounter}`
-}
-
-function fileItem(file: File): UploadItem {
-  // A folder picked through <input webkitdirectory> yields files carrying a
-  // webkitRelativePath; treat those as a folder item grouped below instead.
-  return { id: nextId(), name: file.name, isFolder: false, entries: [{ path: file.name, file }], size: file.size }
-}
-
-function folderItem(name: string, entries: UploadEntry[]): UploadItem {
-  const size = entries.reduce((total, entry) => total + entry.file.size, 0)
-  return { id: nextId(), name, isFolder: true, entries, size }
-}
-
-// fileFromEntry / walkDirectory: read a dropped FileSystemEntry tree into flat
-// UploadEntry list, preserving each file's path relative to the dropped folder.
-function fileFromEntry(entry: FileSystemFileEntry): Promise<File> {
-  return new Promise((resolve, reject) => entry.file(resolve, reject))
-}
-
-async function walkDirectory(dir: FileSystemDirectoryEntry, prefix: string, out: UploadEntry[]): Promise<void> {
-  const reader = dir.createReader()
-  const readBatch = () =>
-    new Promise<FileSystemEntry[]>((resolve, reject) => reader.readEntries(resolve, reject))
-
-  // readEntries returns the directory in batches; keep reading until it drains.
-  for (let batch = await readBatch(); batch.length > 0; batch = await readBatch()) {
-    for (const child of batch) {
-      const childPath = `${prefix}/${child.name}`
-      if (child.isFile) {
-        const file = await fileFromEntry(child as FileSystemFileEntry)
-        out.push({ path: childPath, file })
-      } else if (child.isDirectory) {
-        await walkDirectory(child as FileSystemDirectoryEntry, childPath, out)
-      }
-    }
-  }
-}
-
-async function itemsFromDataTransfer(list: DataTransferItemList): Promise<UploadItem[]> {
-  // webkitGetAsEntry() must be called synchronously while the event is live, so
-  // collect every entry first, then traverse the directories asynchronously.
-  const entries: FileSystemEntry[] = []
-  for (let i = 0; i < list.length; i++) {
-    const entry = list[i].webkitGetAsEntry()
-    if (entry) entries.push(entry)
-  }
-
-  const items: UploadItem[] = []
-  for (const entry of entries) {
-    if (entry.isFile) {
-      const file = await fileFromEntry(entry as FileSystemFileEntry)
-      items.push(fileItem(file))
-    } else if (entry.isDirectory) {
-      const collected: UploadEntry[] = []
-      await walkDirectory(entry as FileSystemDirectoryEntry, entry.name, collected)
-      if (collected.length > 0) items.push(folderItem(entry.name, collected))
-    }
-  }
-  return items
-}
 
 export default function SendPage() {
   const t = useTranslations("Send")
@@ -178,16 +102,7 @@ export default function SendPage() {
 
   function handleFolderChange(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? [])
-    if (files.length > 0) {
-      // Every file from a directory input carries its webkitRelativePath, e.g.
-      // "myfolder/sub/a.txt"; the first segment is the folder name.
-      const top = files[0].webkitRelativePath.split("/")[0] || "folder"
-      const entries: UploadEntry[] = files.map((file) => ({
-        path: file.webkitRelativePath || file.name,
-        file,
-      }))
-      addItems([folderItem(top, entries)])
-    }
+    if (files.length > 0) addItems([folderItemFromInputFiles(files)])
     event.target.value = ""
   }
 
@@ -323,10 +238,7 @@ export default function SendPage() {
           <Card className="p-2">
             <ul className="flex flex-col">
               {items.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted/50"
-                >
+                <li key={item.id} className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted/50">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
                     {item.isFolder ? <Folder className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                   </span>

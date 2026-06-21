@@ -14,11 +14,14 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	codepkg "github.com/matteoepitech/flick/internal/api/code"
+	"github.com/matteoepitech/flick/internal/api/database"
 	"github.com/matteoepitech/flick/internal/api/logging"
 	"github.com/matteoepitech/flick/internal/api/metadata"
 	"github.com/matteoepitech/flick/internal/api/path"
 	"github.com/matteoepitech/flick/internal/api/routes"
+	"github.com/matteoepitech/flick/internal/api/routes/account"
 )
 
 // onDownloadFinished: When a download is done we do this.
@@ -91,9 +94,13 @@ func doDownloadMultipartForm(writer *multipart.Writer, entries []os.DirEntry, pa
 
 // DownloadFileHandler: Build the download file handler.
 //
+// Params:
+//   - queries (*database.Queries): The database queries, used to authorize a
+//     member when the code is bound to a group.
+//
 // Returns:
 // - http.HandlerFunc: The handler function.
-func DownloadFileHandler() http.HandlerFunc {
+func DownloadFileHandler(queries *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			routes.WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -115,6 +122,18 @@ func DownloadFileHandler() http.HandlerFunc {
 		meta, metaErr := metadata.LoadMetadata(path.GetDataDir(), code)
 		if metaErr != nil {
 			logging.LogInfoError("Cannot load metadata for code %q: %v", code, metaErr)
+		}
+
+		if metaErr == nil && metadata.IsGroupBound(&meta) {
+			var groupID pgtype.UUID
+			if err := groupID.Scan(meta.GroupID); err != nil {
+				routes.WriteError(w, http.StatusNotFound, "Code not found")
+				return
+			}
+			if _, _, err := account.RequireGroupMember(r.Context(), queries, account.TokenFromHeader(r), groupID); err != nil {
+				routes.WriteError(w, http.StatusNotFound, "Code not found")
+				return
+			}
 		}
 
 		if metaErr == nil && !metadata.CheckPassword(&meta, r.Header.Get("X-Flick-Password")) {

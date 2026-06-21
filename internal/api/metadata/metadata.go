@@ -46,6 +46,7 @@ type Metadata struct {
 	Encrypted            bool   `json:"encrypted,omitempty"`
 	PasswordHash         string `json:"password_hash,omitempty"`
 	Message              string `json:"message,omitempty"`
+	GroupID              string `json:"group_id,omitempty"`
 }
 
 // maxMessageLen for the message of the code.
@@ -171,6 +172,38 @@ func SetUploaderID(metadata *Metadata, uploaderID string) bool {
 
 	metadata.UploaderID = uploaderID
 	return true
+}
+
+// SetGroupID: Binds the code to a group, making it private (downloadable only
+// through the group routes by its members, never by the public code endpoint).
+// The id is expected to be already validated against the database by the caller.
+//
+// Params:
+// - metadata (*Metadata): The metadata to modify.
+// - groupID (string): The validated group UUID.
+//
+// Returns:
+// - result1 (bool): Return true if the metadata has been changed, else false.
+func SetGroupID(metadata *Metadata, groupID string) bool {
+	if groupID == "" {
+		logging.LogInfoError("Group id is required")
+		return false
+	}
+
+	metadata.GroupID = groupID
+	return true
+}
+
+// IsGroupBound: Report whether a code is private to a group, and therefore must
+// not be served by the public download endpoint.
+//
+// Params:
+// - metadata (*Metadata): The metadata to inspect.
+//
+// Returns:
+// - result1 (bool): True when the code belongs to a group.
+func IsGroupBound(metadata *Metadata) bool {
+	return metadata.GroupID != ""
 }
 
 // SetChecksum: Defines the BLAKE3 checksum of the uploaded archive, as computed
