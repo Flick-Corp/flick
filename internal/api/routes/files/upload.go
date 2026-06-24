@@ -16,15 +16,15 @@ import (
 	"path/filepath"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/matteoepitech/flick/internal/api/code"
-	"github.com/matteoepitech/flick/internal/api/database"
-	"github.com/matteoepitech/flick/internal/api/logging"
-	"github.com/matteoepitech/flick/internal/api/metadata"
-	"github.com/matteoepitech/flick/internal/api/path"
-	"github.com/matteoepitech/flick/internal/api/quota"
-	"github.com/matteoepitech/flick/internal/api/routes"
-	"github.com/matteoepitech/flick/internal/api/routes/account"
-	"github.com/matteoepitech/flick/internal/api/serverconfig"
+	"github.com/Flick-Corp/flick/internal/api/code"
+	"github.com/Flick-Corp/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/logging"
+	"github.com/Flick-Corp/flick/internal/api/metadata"
+	"github.com/Flick-Corp/flick/internal/api/path"
+	"github.com/Flick-Corp/flick/internal/api/quota"
+	"github.com/Flick-Corp/flick/internal/api/routes"
+	"github.com/Flick-Corp/flick/internal/api/routes/account"
+	"github.com/Flick-Corp/flick/internal/api/serverconfig"
 )
 
 // resolveUploaderID: Validate the mandatory X-Flick-User-ID header against the

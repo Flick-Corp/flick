@@ -16,10 +16,10 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/matteoepitech/flick/internal/api/database"
-	"github.com/matteoepitech/flick/internal/api/logging"
-	"github.com/matteoepitech/flick/internal/api/routes"
-	"github.com/matteoepitech/flick/internal/api/routes/account"
+	"github.com/Flick-Corp/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/logging"
+	"github.com/Flick-Corp/flick/internal/api/routes"
+	"github.com/Flick-Corp/flick/internal/api/routes/account"
 )
 
 // DeviceApproveRequest: The JSON body request.

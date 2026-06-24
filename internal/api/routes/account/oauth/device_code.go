@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/matteoepitech/flick/internal/api/code"
-	"github.com/matteoepitech/flick/internal/api/database"
-	"github.com/matteoepitech/flick/internal/api/logging"
-	"github.com/matteoepitech/flick/internal/api/routes"
-	"github.com/matteoepitech/flick/internal/api/routes/account"
+	"github.com/Flick-Corp/flick/internal/api/code"
+	"github.com/Flick-Corp/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/logging"
+	"github.com/Flick-Corp/flick/internal/api/routes"
+	"github.com/Flick-Corp/flick/internal/api/routes/account"
 )
 
 // Lifetime of a device authorization before the user_code expires.

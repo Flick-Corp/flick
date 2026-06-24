@@ -11,7 +11,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/matteoepitech/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/database"
 )
 
 // GroupMembershipResponse: A group the user belongs to, with their role inside

@@ -18,11 +18,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/matteoepitech/flick/internal/api/logging"
-	"github.com/matteoepitech/flick/internal/api/serverconfig"
-	"github.com/matteoepitech/flick/internal/api/utils"
-	"github.com/matteoepitech/flick/internal/api/utils/data"
-	"github.com/matteoepitech/flick/internal/utils/checksum"
+	"github.com/Flick-Corp/flick/internal/api/logging"
+	"github.com/Flick-Corp/flick/internal/api/serverconfig"
+	"github.com/Flick-Corp/flick/internal/api/utils"
+	"github.com/Flick-Corp/flick/internal/api/utils/data"
+	"github.com/Flick-Corp/flick/internal/utils/checksum"
 	"golang.org/x/crypto/argon2"
 )
 

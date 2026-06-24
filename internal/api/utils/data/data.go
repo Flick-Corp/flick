@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/matteoepitech/flick/internal/api/path"
+	"github.com/Flick-Corp/flick/internal/api/path"
 )
 
 // DeleteDataDirWithCode: Delete the data directory of a code from disk.

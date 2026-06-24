@@ -10,7 +10,7 @@ package quota
 import (
 	"os"
 
-	"github.com/matteoepitech/flick/internal/api/metadata"
+	"github.com/Flick-Corp/flick/internal/api/metadata"
 )
 
 // UsedByGroupID: Walk the data directory and sum the stored size of every active

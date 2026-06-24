@@ -9,7 +9,7 @@ package main
 
 import (
 	"context"
-	"github.com/matteoepitech/flick/internal/api"
+	"github.com/Flick-Corp/flick/internal/api"
 	"log"
 )
 

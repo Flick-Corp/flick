@@ -15,9 +15,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/matteoepitech/flick/internal/api/code"
-	"github.com/matteoepitech/flick/internal/api/database"
-	"github.com/matteoepitech/flick/internal/api/path"
+	"github.com/Flick-Corp/flick/internal/api/code"
+	"github.com/Flick-Corp/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/path"
 )
 
 // Variables that will contain the total uploads/downloads.

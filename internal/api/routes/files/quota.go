@@ -12,12 +12,12 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/matteoepitech/flick/internal/api/database"
-	"github.com/matteoepitech/flick/internal/api/path"
-	"github.com/matteoepitech/flick/internal/api/quota"
-	"github.com/matteoepitech/flick/internal/api/routes"
-	"github.com/matteoepitech/flick/internal/api/routes/account"
-	"github.com/matteoepitech/flick/internal/api/serverconfig"
+	"github.com/Flick-Corp/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/path"
+	"github.com/Flick-Corp/flick/internal/api/quota"
+	"github.com/Flick-Corp/flick/internal/api/routes"
+	"github.com/Flick-Corp/flick/internal/api/routes/account"
+	"github.com/Flick-Corp/flick/internal/api/serverconfig"
 )
 
 // QuotaHandler: Build the quota usage handler. With a `group_id` query parameter

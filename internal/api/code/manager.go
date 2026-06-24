@@ -11,10 +11,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/matteoepitech/flick/internal/api/metadata"
-	"github.com/matteoepitech/flick/internal/api/path"
-	"github.com/matteoepitech/flick/internal/api/utils"
-	"github.com/matteoepitech/flick/internal/api/utils/data"
+	"github.com/Flick-Corp/flick/internal/api/metadata"
+	"github.com/Flick-Corp/flick/internal/api/path"
+	"github.com/Flick-Corp/flick/internal/api/utils"
+	"github.com/Flick-Corp/flick/internal/api/utils/data"
 	"github.com/patrickmn/go-cache"
 )
 

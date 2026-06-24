@@ -13,8 +13,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/matteoepitech/flick/internal/api/path"
-	"github.com/matteoepitech/flick/internal/api/serverconfig"
+	"github.com/Flick-Corp/flick/internal/api/path"
+	"github.com/Flick-Corp/flick/internal/api/serverconfig"
 )
 
 // SendServerUserConfig: Sends the user-facing server config to the web by a GET.

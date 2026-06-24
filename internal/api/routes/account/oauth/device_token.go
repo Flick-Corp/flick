@@ -12,8 +12,8 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/matteoepitech/flick/internal/api/database"
-	"github.com/matteoepitech/flick/internal/api/routes"
+	"github.com/Flick-Corp/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/routes"
 )
 
 // DeviceTokenRequest: The JSON body request.

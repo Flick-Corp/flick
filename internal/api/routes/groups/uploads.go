@@ -14,10 +14,10 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	codepkg "github.com/matteoepitech/flick/internal/api/code"
-	"github.com/matteoepitech/flick/internal/api/database"
-	"github.com/matteoepitech/flick/internal/api/routes"
-	"github.com/matteoepitech/flick/internal/api/routes/account"
+	codepkg "github.com/Flick-Corp/flick/internal/api/code"
+	"github.com/Flick-Corp/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/routes"
+	"github.com/Flick-Corp/flick/internal/api/routes/account"
 )
 
 // DeleteGroupUploadHandler: Revokes the transfer identified by the uploadId path

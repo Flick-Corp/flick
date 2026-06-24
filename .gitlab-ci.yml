@@ -11,7 +11,7 @@ stages:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  MIRROR_URL: "github.com/matteoepitech/flick.git"
+  MIRROR_URL: "github.com/Flick-Corp/flick.git"
   BIN_NAME: "flick"
 
 # Build Job (server / Go)

@@ -9,7 +9,7 @@ package groups
 
 import (
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/matteoepitech/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/database"
 )
 
 // AddMemberRequest: The POST payload to add a user to a group. The group id is

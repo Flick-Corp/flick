@@ -14,10 +14,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/matteoepitech/flick/internal/api/logging"
-	"github.com/matteoepitech/flick/internal/api/path"
-	"github.com/matteoepitech/flick/internal/api/serverconfig"
-	"github.com/matteoepitech/flick/internal/api/utils"
+	"github.com/Flick-Corp/flick/internal/api/logging"
+	"github.com/Flick-Corp/flick/internal/api/path"
+	"github.com/Flick-Corp/flick/internal/api/serverconfig"
+	"github.com/Flick-Corp/flick/internal/api/utils"
 )
 
 // WriteDefaultConfig: Writes the default server configuration.

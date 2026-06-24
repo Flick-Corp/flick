@@ -22,7 +22,7 @@ ENV CGO_ENABLED=0 GOOS=linux
 RUN VERSION="${VERSION}" \
     COMMIT="${COMMIT:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}" \
     BUILD_DATE="${BUILD_DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" \
-    CLI_PKG="github.com/matteoepitech/flick/internal/cli" \
+    CLI_PKG="github.com/Flick-Corp/flick/internal/cli" \
     && go build -trimpath -ldflags="-s -w -X ${CLI_PKG}.CLIVersion=${VERSION} -X ${CLI_PKG}.CLICommit=${COMMIT} -X ${CLI_PKG}.CLIBuildDate=${BUILD_DATE}" \
         -o /out/flick-api ./cmd/api
 

@@ -11,8 +11,8 @@ package groups
 import (
 	"net/http"
 
-	"github.com/matteoepitech/flick/internal/api/database"
-	"github.com/matteoepitech/flick/internal/api/routes"
+	"github.com/Flick-Corp/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/routes"
 )
 
 // GroupMembersHandler: Routes the group members collection by method (GET lists,

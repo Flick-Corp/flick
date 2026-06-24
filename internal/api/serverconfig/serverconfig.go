@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/matteoepitech/flick/internal/api/utils"
+	"github.com/Flick-Corp/flick/internal/api/utils"
 )
 
 // Server configuration template
