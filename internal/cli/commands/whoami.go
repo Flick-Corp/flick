@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/matteoepitech/flick/internal/cli/config"
-	"github.com/matteoepitech/flick/internal/cli/network"
+	"github.com/Flick-Corp/flick/internal/cli/config"
+	"github.com/Flick-Corp/flick/internal/cli/network"
 	"github.com/spf13/cobra"
 )
 

@@ -20,9 +20,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/matteoepitech/flick/internal/cli/config"
-	"github.com/matteoepitech/flick/internal/cli/network"
-	"github.com/matteoepitech/flick/internal/utils/checksum"
+	"github.com/Flick-Corp/flick/internal/cli/config"
+	"github.com/Flick-Corp/flick/internal/cli/network"
+	archiveutil "github.com/Flick-Corp/flick/internal/utils/archive"
+	"github.com/Flick-Corp/flick/internal/utils/checksum"
 )
 
 // exploreGroup: a group the user belongs to, as shown on the groups screen.
@@ -252,7 +253,7 @@ func deleteGroupFolder(token, groupID, folderID string) error {
 // Returns:
 // - result1 (error): An error if the upload failed.
 func uploadToGroupFolder(token, groupID, folderID string, srcs []string) error {
-	archivePath, err := archiveToTemp(srcs)
+	archivePath, err := archiveutil.ToTemp(srcs)
 	if err != nil {
 		return err
 	}
@@ -271,7 +272,7 @@ func uploadToGroupFolder(token, groupID, folderID string, srcs []string) error {
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("file", randomArchiveName())
+	part, err := writer.CreateFormFile("file", archiveutil.RandomName())
 	if err != nil {
 		return err
 	}

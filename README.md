@@ -10,7 +10,7 @@ Upload a file, get a simple code like `ocean-tiger-42`, share it. That's it.
 <img src="docs/assets/banner.png" width="100%" alt="Flick in action">
 -->
 
-<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/matteoepitech/flick?label=Star%20Repo&style=social">
+<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/Flick-Corp/flick?label=Star%20Repo&style=social">
 
 <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white" alt="Go">
 <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js">
@@ -87,7 +87,7 @@ Get Flick running in minutes.
 All you need is [Docker](https://docs.docker.com/get-docker/) installed on your server.
 
 ```
-git clone https://github.com/matteoepitech/flick.git
+git clone https://github.com/Flick-Corp/flick.git
 cd flick
 
 # Create your configuration
@@ -214,7 +214,7 @@ Contributions are welcome! Feel free to open an issue or submit a pull request.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=matteoepitech/flick&type=Date)](https://star-history.com/#matteoepitech/flick&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Flick-Corp/flick&type=Date)](https://star-history.com/#Flick-Corp/flick&Date)
 
 ---
 

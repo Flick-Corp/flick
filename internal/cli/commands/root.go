@@ -11,7 +11,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/matteoepitech/flick/internal/cli/config"
+	"github.com/Flick-Corp/flick/internal/cli/config"
 	"github.com/spf13/cobra"
 )
 

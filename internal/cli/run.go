@@ -10,8 +10,8 @@ package cli
 import (
 	"context"
 
-	"github.com/matteoepitech/flick/internal/cli/commands"
-	"github.com/matteoepitech/flick/internal/cli/config"
+	"github.com/Flick-Corp/flick/internal/cli/commands"
+	"github.com/Flick-Corp/flick/internal/cli/config"
 )
 
 // Current CLIVersion

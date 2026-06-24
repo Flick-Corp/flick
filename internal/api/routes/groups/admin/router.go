@@ -11,8 +11,8 @@ package admin
 import (
 	"net/http"
 
-	"github.com/matteoepitech/flick/internal/api/database"
-	"github.com/matteoepitech/flick/internal/api/routes"
+	"github.com/Flick-Corp/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/routes"
 )
 
 // GroupsHandler: Routes the collection endpoint by method (GET lists, POST

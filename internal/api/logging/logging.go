@@ -9,7 +9,7 @@ package logging
 
 import (
 	"fmt"
-	"github.com/matteoepitech/flick/internal/api/utils"
+	"github.com/Flick-Corp/flick/internal/api/utils"
 	"time"
 )
 

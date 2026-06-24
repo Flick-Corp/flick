@@ -9,7 +9,7 @@ package main
 
 import (
 	"context"
-	"github.com/matteoepitech/flick/internal/cli"
+	"github.com/Flick-Corp/flick/internal/cli"
 )
 
 // main Main entry point

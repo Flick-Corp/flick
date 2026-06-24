@@ -17,7 +17,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/matteoepitech/flick/internal/api/database"
+	"github.com/Flick-Corp/flick/internal/api/database"
 )
 
 // TokenFromHeader: Extracts the bearer token from the Authorization header.

@@ -16,7 +16,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/matteoepitech/flick/internal/cli/network"
+	"github.com/Flick-Corp/flick/internal/cli/network"
 )
 
 // Configuration structure type

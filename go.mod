@@ -1,4 +1,4 @@
-module github.com/matteoepitech/flick
+module github.com/Flick-Corp/flick
 
 go 1.26.2
 

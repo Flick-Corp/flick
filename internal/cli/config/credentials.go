@@ -15,7 +15,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/matteoepitech/flick/internal/cli/network"
+	"github.com/Flick-Corp/flick/internal/cli/network"
 )
 
 // Credentials structure type, stored at ~/.flick/credentials.json
