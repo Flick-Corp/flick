@@ -1,4 +1,4 @@
-import JSZip from "jszip"
+import { makeZip } from "client-zip"
 import * as tus from "tus-js-client"
 import { hashBlob, equal } from "@/lib/checksum"
 
@@ -171,12 +171,18 @@ function randomArchiveName(): string {
   return `${id}.zip`
 }
 
-// buildUploadArchive: Pack everything the user staged into ONE zip and checksum
-// the exact bytes. A loose file sits at the archive root; a folder keeps its full
+// archiveEntry: one file destined for the zip, named by its path inside the
+// archive. `input` is streamed (never read fully into memory) by the zip writer.
+interface archiveEntry {
+  name: string
+  input: Blob
+  lastModified: Date
+}
+
+// archiveEntries: Flatten everything the user staged into the list of zip
+// entries. A loose file sits at the archive root; a folder keeps its full
 // structure. Top-level names are de-duplicated so two staged items never collide.
-// Shared by the public upload and group uploads.
-async function buildUploadArchive(items: Upload[]): Promise<{ archive: Blob; checksum: string }> {
-  const zip = new JSZip()
+function archiveEntries(items: Upload[]): archiveEntry[] {
   const usedTop = new Set<string>()
 
   // Keep top-level names unique so two staged items never overwrite each other:
@@ -198,6 +204,7 @@ async function buildUploadArchive(items: Upload[]): Promise<{ archive: Blob; che
     }
   }
 
+  const entries: archiveEntry[] = []
   for (const item of items) {
     if (item.isFolder) {
       const top = dedupTop(item.name, false)
@@ -205,21 +212,96 @@ async function buildUploadArchive(items: Upload[]): Promise<{ archive: Blob; che
         // entry.path is "<folder>/<rest>"; re-root it under the deduped name.
         const slash = entry.path.indexOf("/")
         const rest = slash === -1 ? entry.path : entry.path.slice(slash + 1)
-        zip.file(`${top}/${rest}`, entry.file)
+        entries.push({ name: `${top}/${rest}`, input: entry.file, lastModified: new Date(entry.file.lastModified) })
       }
     } else {
-      zip.file(dedupTop(item.name, true), item.entries[0].file)
+      const file = item.entries[0].file
+      entries.push({ name: dedupTop(item.name, true), input: file, lastModified: new Date(file.lastModified) })
+    }
+  }
+  return entries
+}
+
+// PreparedArchive: a staged upload archive ready to hand to tus. `archive` is a
+// sliceable Blob (disk-backed when OPFS is available), `checksum` is its BLAKE3
+// digest, and `cleanup` releases any temporary storage once the upload is done.
+interface PreparedArchive {
+  archive: Blob
+  checksum: string
+  cleanup: () => Promise<void>
+}
+
+const noopCleanup = async (): Promise<void> => {}
+
+// opfsRoot: The Origin Private File System root, or null when the browser does
+// not expose it. OPFS is disk-backed storage private to the origin; staging the
+// archive there is what keeps a multi-gigabyte upload from ever touching RAM.
+async function opfsRoot(): Promise<FileSystemDirectoryHandle | null> {
+  try {
+    if (typeof navigator === "undefined" || !navigator.storage?.getDirectory) return null
+    return await navigator.storage.getDirectory()
+  } catch {
+    return null
+  }
+}
+
+// buildUploadArchive: Pack everything the user staged into ONE zip and checksum
+// the exact bytes. client-zip streams each source file straight into the archive
+// and the archive itself is piped to a disk-backed OPFS file, so neither the
+// inputs nor the finished zip are ever held in memory — a huge upload stays flat
+// on RAM. The resulting File is still sliceable, which is all tus needs to send
+// it back up chunk by chunk. Entries are stored uncompressed (client-zip does no
+// deflate); for a transfer tool that trades a little bandwidth for bounded memory
+// and is moot for already-compressed media. Shared by public and group uploads.
+async function buildUploadArchive(items: Upload[]): Promise<PreparedArchive> {
+  const entries = archiveEntries(items)
+  // A fresh stream per attempt: a ReadableStream can only be consumed once.
+  const zipStream = (): ReadableStream<Uint8Array> => makeZip(entries)
+
+  const root = await opfsRoot()
+  if (root) {
+    const tmpName = randomArchiveName()
+    try {
+      const handle = await root.getFileHandle(tmpName, { create: true })
+      const writable = await handle.createWritable()
+      // pipeTo drains the zip to disk and closes the file when the stream ends.
+      await zipStream().pipeTo(writable as unknown as WritableStream<Uint8Array>)
+
+      const archive = await handle.getFile()
+      // Checksum the exact archive bytes (streamed from disk); the server stores
+      // this digest and hands it back on download so the downloader can confirm
+      // the transfer is intact (BLAKE3 hex, identical to the CLI and Go server).
+      const checksum = await hashBlob(archive)
+      return {
+        archive,
+        checksum,
+        cleanup: async () => {
+          // Best effort: a leftover temp file is harmless and the browser
+          // reclaims OPFS storage on its own.
+          try {
+            await root.removeEntry(tmpName)
+          } catch {
+            // ignore
+          }
+        },
+      }
+    } catch {
+      try {
+        await root.removeEntry(tmpName)
+      } catch {
+        // ignore
+      }
+      // Fall through to the in-memory path below if OPFS staging failed.
     }
   }
 
-  const archive = await zip.generateAsync({ type: "blob", compression: "DEFLATE" })
-
-  // Checksum the exact archive bytes; the server stores this digest and hands it
-  // back on download so the downloader can confirm the transfer is intact
-  // (BLAKE3 hex, identical to the CLI and Go server).
+  // Fallback (no OPFS, or OPFS staging failed): collect the stream into one Blob.
+  // Each input file is still streamed in turn, so peak memory is the finished
+  // archive rather than every source file at once, and browsers spill large
+  // blobs to disk on their own.
+  const archive = await new Response(zipStream()).blob()
   const checksum = await hashBlob(archive)
-
-  return { archive, checksum }
+  return { archive, checksum, cleanup: noopCleanup }
 }
 
 // resolveShareCode: Fetch the share code the server assigned to a finished tus
@@ -296,27 +378,30 @@ export async function uploadFile(
   // The server requires a known uploader (X-Flick-User-ID), exactly like the CLI.
   const uploaderId = await ensureUploaderId(signal)
 
-  const { archive, checksum: archiveChecksum } = await buildUploadArchive(items)
+  const { archive, checksum: archiveChecksum, cleanup } = await buildUploadArchive(items)
+  try {
+    const metadata: Record<string, string> = {
+      checksum: archiveChecksum,
+      encrypted: "false",
+      expiration,
+      maxDownloadCount: String(maxDownloadCount),
+    }
+    // An empty password leaves the code public; the server treats it as unset.
+    if (password) metadata.password = password
+    // Optional personal note surfaced to the downloader on the receive page.
+    if (message) metadata.message = message
 
-  const metadata: Record<string, string> = {
-    checksum: archiveChecksum,
-    encrypted: "false",
-    expiration,
-    maxDownloadCount: String(maxDownloadCount),
+    return await uploadArchiveViaTus(
+      archive,
+      randomArchiveName(),
+      metadata,
+      { "X-Flick-User-ID": uploaderId },
+      onProgress,
+      signal
+    )
+  } finally {
+    await cleanup()
   }
-  // An empty password leaves the code public; the server treats it as unset.
-  if (password) metadata.password = password
-  // Optional personal note surfaced to the downloader on the receive page.
-  if (message) metadata.message = message
-
-  return uploadArchiveViaTus(
-    archive,
-    randomArchiveName(),
-    metadata,
-    { "X-Flick-User-ID": uploaderId },
-    onProgress,
-    signal
-  )
 }
 
 // DownloadedArchive: one stored item pulled back from the server (the combined
@@ -1252,24 +1337,27 @@ export async function uploadToGroup(
   onProgress?: (progress: UploadProgress) => void,
   signal?: AbortSignal
 ): Promise<void> {
-  const { archive, checksum } = await buildUploadArchive(items)
+  const { archive, checksum, cleanup } = await buildUploadArchive(items)
+  try {
+    const metadata: Record<string, string> = {
+      checksum,
+      encrypted: "false",
+      expiration,
+      groupId,
+    }
+    if (folderId) metadata.folderId = folderId
 
-  const metadata: Record<string, string> = {
-    checksum,
-    encrypted: "false",
-    expiration,
-    groupId,
+    await uploadArchiveViaTus(
+      archive,
+      randomArchiveName(),
+      metadata,
+      { Authorization: `Bearer ${token}` },
+      onProgress,
+      signal
+    )
+  } finally {
+    await cleanup()
   }
-  if (folderId) metadata.folderId = folderId
-
-  await uploadArchiveViaTus(
-    archive,
-    randomArchiveName(),
-    metadata,
-    { Authorization: `Bearer ${token}` },
-    onProgress,
-    signal
-  )
 }
 
 // downloadGroupUpload: Fetch a group transfer's archive(s) through the native
