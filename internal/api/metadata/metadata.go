@@ -146,6 +146,16 @@ func SetMaxDownloadCount(metadata *Metadata, maxDownloadCount string) bool {
 		return false
 	}
 
+	if mdc < 1 {
+		logging.LogInfoError("Max download count %q is invalid: must be at least 1", maxDownloadCount)
+		return false
+	}
+
+	if !serverconfig.Conf.AllowMultipleDownloads && mdc > 1 {
+		logging.LogInfoError("Max download count %q exceeds the maximum allowed by configuration: multiple downloads are disabled", maxDownloadCount)
+		return false
+	}
+
 	if mdc > serverconfig.Conf.MaxDownloadCount {
 		logging.LogInfoError("Max download count %q exceeds the maximum allowed by configuration (%d)", maxDownloadCount, serverconfig.Conf.MaxDownloadCount)
 		return false

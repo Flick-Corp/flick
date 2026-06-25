@@ -28,9 +28,10 @@ type Configuration struct {
 
 // Server limits structure type (fetched dynamically, not saved in local config)
 type ServerLimits struct {
-	MaxFileSizeMb    int32  `json:"max_file_size_mb"`
-	MaxExpiration    string `json:"max_expiration"`
-	MaxDownloadCount int32  `json:"max_download_count"`
+	MaxFileSizeMb          int32  `json:"max_file_size_mb"`
+	MaxExpiration          string `json:"max_expiration"`
+	MaxDownloadCount       int32  `json:"max_download_count"`
+	AllowMultipleDownloads bool   `json:"allow_multiple_downloads"`
 }
 
 // Global configuration of the CLI

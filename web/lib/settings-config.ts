@@ -119,6 +119,7 @@ export const settingsSections: SettingSection[] = [
         type: "switch",
         defaultValue: true,
         hasDescription: true,
+        notAvailable: true,
       },
       {
         key: "max_generation_key_per_hour",
@@ -126,6 +127,7 @@ export const settingsSections: SettingSection[] = [
         defaultValue: 60,
         dependsOn: { key: "activate_rate_limit", equals: true },
         hasDescription: true,
+        notAvailable: true,
       },
       {
         key: "max_upload_per_hour_per_key",
@@ -133,6 +135,7 @@ export const settingsSections: SettingSection[] = [
         defaultValue: 10,
         dependsOn: { key: "activate_rate_limit", equals: true },
         hasDescription: true,
+        notAvailable: true,
       },
       {
         key: "max_upload_per_hour_per_ip",
@@ -140,6 +143,7 @@ export const settingsSections: SettingSection[] = [
         defaultValue: 30,
         dependsOn: { key: "activate_rate_limit", equals: true },
         hasDescription: true,
+        notAvailable: true,
       },
       {
         key: "max_upload_per_hour",
@@ -147,6 +151,7 @@ export const settingsSections: SettingSection[] = [
         defaultValue: 1000,
         dependsOn: { key: "activate_rate_limit", equals: true },
         hasDescription: true,
+        notAvailable: true,
       },
     ],
   },
