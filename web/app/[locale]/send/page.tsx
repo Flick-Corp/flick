@@ -4,13 +4,14 @@ import { ArrowUpRight, ChevronLeft, FileText, Folder, Upload, X } from "lucide-r
 import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react"
 
+import { ExpirationPicker } from "@/components/expiration-picker"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { ApiError, fetchQuota, fetchServerLimits, uploadFile, type QuotaUsage } from "@/lib/api"
+import { ApiError, fetchQuota, fetchServerLimits, parseDurationMinutes, uploadFile, type QuotaUsage } from "@/lib/api"
 import {
   fileItem,
   folderItemFromInputFiles,
@@ -21,8 +22,6 @@ import {
 import { Link, useRouter } from "@/i18n/navigation"
 import { cn } from "@/lib/utils"
 
-type Expiration = "1h" | "2h" | "3h" | "4h"
-
 export default function SendPage() {
   const t = useTranslations("Send")
   const router = useRouter()
@@ -31,7 +30,7 @@ export default function SendPage() {
 
   const [items, setItems] = useState<UploadItem[]>([])
   const [isDragging, setIsDragging] = useState(false)
-  const [expiration, setExpiration] = useState<Expiration>("1h")
+  const [expiration, setExpiration] = useState<string>("1h")
   const [maxDownloadCount, setMaxDownloadCount] = useState<number>(1)
   const [maxDownloadLimit, setMaxDownloadLimit] = useState<number>(1)
   const [allowMultipleDownloads, setAllowMultipleDownloads] = useState<boolean>(false)
@@ -42,16 +41,18 @@ export default function SendPage() {
   const [progress, setProgress] = useState<{ name: string; percent: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [maxFileSize, setMaxFileSize] = useState<number>(1000 * 1024 * 1024)
+  const [maxExpiration, setMaxExpiration] = useState<string>("4h")
   const [quota, setQuota] = useState<QuotaUsage | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
     fetchServerLimits(controller.signal)
-      .then(({ default: def, max, allowMultiple, maxFileSizeMb }) => {
+      .then(({ default: def, max, allowMultiple, maxFileSizeMb, maxExpiration: maxExp }) => {
         setAllowMultipleDownloads(allowMultiple)
         setMaxDownloadLimit(max)
         setMaxDownloadCount(allowMultiple ? def : 1)
         if (maxFileSizeMb > 0) setMaxFileSize(maxFileSizeMb * 1024 * 1024)
+        setMaxExpiration(maxExp)
       })
       .catch(() => {})
     fetchQuota(controller.signal)
@@ -163,13 +164,6 @@ export default function SendPage() {
     }
   }
 
-  const expirations: { value: Expiration; label: string }[] = [
-    { value: "1h", label: t("expiration1h") },
-    { value: "2h", label: t("expiration2h") },
-    { value: "3h", label: t("expiration3h") },
-    { value: "4h", label: t("expiration4h") },
-  ]
-
   // Quota bar: the solid fill is what is already stored, the lighter fill
   // projects the currently staged selection on top so the user sees whether it
   // will fit before sending. A limit of 0 means unlimited.
@@ -180,10 +174,12 @@ export default function SendPage() {
     quotaLimitBytes > 0 ? Math.min(100, ((quota!.usedBytes + selectedBytes) / quotaLimitBytes) * 100) : 0
   const overQuota = quotaLimitBytes > 0 && quota!.usedBytes + selectedBytes > quotaLimitBytes
 
+  const overMaxExpiration = expiration.length > 0 && parseDurationMinutes(expiration) > parseDurationMinutes(maxExpiration)
+
   // When password protection is on, an empty password would silently produce a
   // public code, so block submission until one is typed.
   const canSubmit =
-    items.length > 0 && !submitting && !overQuota && (!passwordEnabled || password.trim().length > 0)
+    items.length > 0 && !submitting && !overQuota && !overMaxExpiration && (!passwordEnabled || password.trim().length > 0)
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col items-center px-6 py-16">
@@ -313,26 +309,7 @@ export default function SendPage() {
 
           <div className="flex flex-col gap-3">
             <Label className="text-sm font-semibold text-foreground">{t("expiration")}</Label>
-            <div className="flex flex-wrap gap-2">
-              {expirations.map((option) => {
-                const active = expiration === option.value
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setExpiration(option.value)}
-                    className={cn(
-                      "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
-                      active
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-background text-foreground hover:bg-muted"
-                    )}
-                  >
-                    {option.label}
-                  </button>
-                )
-              })}
-            </div>
+            <ExpirationPicker value={expiration} onChange={setExpiration} maxExpiration={maxExpiration} />
           </div>
 
           {allowMultipleDownloads && (

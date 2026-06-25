@@ -571,6 +571,20 @@ export interface ServerLimits {
   max: number
   allowMultiple: boolean
   maxFileSizeMb: number
+  maxExpiration: string
+}
+
+// Convert a duration string like "30m", "4h", "7d" to total minutes.
+export function parseDurationMinutes(duration: string): number {
+  const match = duration.match(/^(\d+)([mhd])$/)
+  if (!match) return 0
+  const val = Number.parseInt(match[1], 10)
+  switch (match[2]) {
+    case "d": return val * 1440
+    case "h": return val * 60
+    case "m": return val
+    default: return 0
+  }
 }
 
 export async function fetchServerLimits(signal?: AbortSignal): Promise<ServerLimits> {
@@ -579,7 +593,8 @@ export async function fetchServerLimits(signal?: AbortSignal): Promise<ServerLim
   const max = typeof conf.max_download_count === "number" ? conf.max_download_count : def
   const allowMultiple = conf.allow_multiple_downloads === true
   const maxFileSizeMb = typeof conf.max_file_size_mb === "number" ? conf.max_file_size_mb : 1000
-  return { default: def, max: Math.max(max, def), allowMultiple, maxFileSizeMb }
+  const maxExpiration = typeof conf.max_expiration === "string" ? conf.max_expiration : "4h"
+  return { default: def, max: Math.max(max, def), allowMultiple, maxFileSizeMb, maxExpiration }
 }
 
 export interface QuotaUsage {

@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { Download, File as FileIcon, Folder, FolderPlus, Loader2, Trash2, Upload as UploadIcon, X } from "lucide-react"
 
 import { ErrorState } from "@/components/error-state"
+import { ExpirationPicker } from "@/components/expiration-picker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -16,6 +17,8 @@ import {
   downloadGroupUpload,
   exploreGroup,
   groupUploadInfo,
+  fetchServerLimits,
+  parseDurationMinutes,
   triggerBlobDownload,
   uploadToGroup,
   type GroupExplore,
@@ -28,9 +31,6 @@ import {
   type UploadItem,
 } from "@/lib/upload-staging"
 import { cn } from "@/lib/utils"
-
-type Expiration = "1h" | "2h" | "3h" | "4h"
-const EXPIRATIONS: Expiration[] = ["1h", "2h", "3h", "4h"]
 
 interface GroupFilesProps {
   groupId: string
@@ -61,8 +61,9 @@ export function GroupFiles({ groupId, token, canManage }: GroupFilesProps) {
   const [newFolder, setNewFolder] = useState("")
   const [creating, setCreating] = useState(false)
 
+  const [maxExpiration, setMaxExpiration] = useState<string>("4h")
   const [staged, setStaged] = useState<UploadItem[]>([])
-  const [expiration, setExpiration] = useState<Expiration>("1h")
+  const [expiration, setExpiration] = useState<string>("1h")
   const [sending, setSending] = useState(false)
   const [percent, setPercent] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -85,6 +86,14 @@ export function GroupFiles({ groupId, token, canManage }: GroupFilesProps) {
       .finally(() => setLoading(false))
     return () => ctrl.abort()
   }, [token, groupId, currentFolderId, reloadKey, t])
+
+  useEffect(() => {
+    const ctrl = new AbortController()
+    fetchServerLimits(ctrl.signal)
+      .then(({ maxExpiration: maxExp }) => setMaxExpiration(maxExp))
+      .catch(() => {})
+    return () => ctrl.abort()
+  }, [])
 
   // Resolve each transfer's real file names so the list shows them rather than
   // the internal share code.
@@ -203,8 +212,10 @@ export function GroupFiles({ groupId, token, canManage }: GroupFilesProps) {
     [token, groupId, reload, t]
   )
 
+  const overMaxExpiration = expiration.length > 0 && parseDurationMinutes(expiration) > parseDurationMinutes(maxExpiration)
+
   const handleSend = useCallback(async () => {
-    if (staged.length === 0) return
+    if (staged.length === 0 || overMaxExpiration) return
     setSending(true)
     setActionError(null)
     setPercent(0)
@@ -221,7 +232,7 @@ export function GroupFiles({ groupId, token, canManage }: GroupFilesProps) {
       setSending(false)
       setPercent(null)
     }
-  }, [staged, token, groupId, expiration, currentFolderId, reload, t])
+  }, [staged, token, groupId, expiration, currentFolderId, reload, t, overMaxExpiration])
 
   const handleDownload = useCallback(
     async (id: string, code: string) => {
@@ -342,23 +353,11 @@ export function GroupFiles({ groupId, token, canManage }: GroupFilesProps) {
                 ))}
               </ul>
 
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-muted-foreground" htmlFor="group-exp">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-foreground">
                   {t("expirationLabel")}
                 </label>
-                <select
-                  id="group-exp"
-                  className="h-9 rounded-md border bg-background px-2 text-sm disabled:opacity-50"
-                  value={expiration}
-                  disabled={sending}
-                  onChange={(e) => setExpiration(e.target.value as Expiration)}
-                >
-                  {EXPIRATIONS.map((exp) => (
-                    <option key={exp} value={exp}>
-                      {t(`exp_${exp}`)}
-                    </option>
-                  ))}
-                </select>
+                <ExpirationPicker value={expiration} onChange={setExpiration} maxExpiration={maxExpiration} />
                 <Button className="ml-auto" onClick={handleSend} disabled={sending}>
                   {sending ? <Loader2 className="animate-spin" /> : <UploadIcon />}
                   {sending && percent !== null ? `${percent}%` : t("sendFiles")}
