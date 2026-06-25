@@ -11,8 +11,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/Flick-Corp/flick/internal/api/utils"
+	"github.com/go-playground/validator/v10"
 )
 
 // Server configuration template
@@ -21,7 +21,7 @@ type Configuration struct {
 	MaxFileSizeMb           int    `json:"max_file_size_mb" validate:"required,gte=0" user:"true"`
 	DefaultExpiration       string `json:"default_expiration" validate:"required,duration" user:"true"`
 	MaxExpiration           string `json:"max_expiration" validate:"required,duration" user:"true"`
-	AllowMultipleDownloads  bool   `json:"allow_multiple_downloads"`
+	AllowMultipleDownloads  bool   `json:"allow_multiple_downloads" user:"true"`
 	DefaultDownloadCount    int    `json:"default_download_count" validate:"required,gte=1" user:"true"`
 	MaxDownloadCount        int    `json:"max_download_count" validate:"required,gtefield=DefaultDownloadCount" user:"true"`
 	RequirePassword         bool   `json:"require_password"`

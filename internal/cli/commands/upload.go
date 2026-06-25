@@ -370,6 +370,13 @@ func RunUpload(cmd *cobra.Command, args []string, exp string, mdc string, encryp
 		mdcValue = strconv.FormatInt(int64(config.Conf.DefDownloadCount), 10)
 	}
 
+	if !serverLimits.AllowMultipleDownloads && mdcValue != "" {
+		mdvInt, err := strconv.ParseInt(mdcValue, 10, 32)
+		if err == nil && mdvInt > 1 {
+			return fmt.Errorf("Failure: The max download count is limited to 1 because multiple downloads are disabled on the server.")
+		}
+	}
+
 	if serverLimits.MaxDownloadCount > 0 {
 		mdvInt, err := strconv.ParseInt(mdcValue, 10, 32)
 		if err == nil && mdvInt > int64(serverLimits.MaxDownloadCount) {
