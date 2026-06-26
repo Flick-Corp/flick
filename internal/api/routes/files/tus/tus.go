@@ -69,6 +69,7 @@ func NewHandler(queries *database.Queries) (http.Handler, error) {
 		StoreComposer:             composer,
 		MaxSize:                   maxSize,
 		DisableDownload:           true,
+		RespectForwardedHeaders:   true,
 		Logger:                    slog.New(slog.NewTextHandler(io.Discard, nil)),
 		PreUploadCreateCallback:   preUploadCreate(queries),
 		PreFinishResponseCallback: preFinishResponse(queries),
