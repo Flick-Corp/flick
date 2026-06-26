@@ -56,31 +56,27 @@ type pickerItem struct {
 
 // exploreModel: the Bubble Tea state.
 type exploreModel struct {
-	token  string
-	mode   int
-	status string
-
-	groups      []exploreGroup
-	groupCursor int
-
-	groupID   string
-	groupName string
-	groupRole string
-	roots     []*exploreNode
-	rows      []exploreRow
-	cursor    int
-	currentID string // folder whose contents receive create/upload actions
-
-	// folder creation prompt (tree mode)
-	creating  bool
-	nameInput string
-
-	// local file picker (upload)
+	token          string
+	mode           int
+	status         string
+	height         int
+	width          int
+	groups         []exploreGroup
+	groupCursor    int
+	groupID        string
+	groupName      string
+	groupRole      string
+	roots          []*exploreNode
+	rows           []exploreRow
+	cursor         int
+	currentID      string
+	creating       bool
+	nameInput      string
 	pickerDir      string
 	pickerItems    []pickerItem
 	pickerCursor   int
 	pickerSelected map[string]bool
-	pickerTarget   string // group folder id to upload into
+	pickerTarget   string
 }
 
 // groupsMsg: carries the user's groups once loaded.

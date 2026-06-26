@@ -64,6 +64,10 @@ func (m exploreModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, loadFolderCmd(m.token, m.groupID, msg.reloadFolder)
 		}
 		return m, nil
+	case tea.WindowSizeMsg:
+		m.height = msg.Height
+		m.width = msg.Width
+		return m, nil
 	case tea.KeyMsg:
 		return m.handleKey(msg)
 	}
