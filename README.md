@@ -9,7 +9,6 @@ Upload a file, get a simple code like `ocean-tiger-42`, share it. That's it.
 <img src="docs/assets/banner.png" width="100%" alt="Flick">
 
 <br>
-<br>
 
 <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/Flick-Corp/flick?label=Star%20Repo&style=social">
 
@@ -17,18 +16,6 @@ Upload a file, get a simple code like `ocean-tiger-42`, share it. That's it.
 <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js">
 <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL">
 <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
-
-<br>
-<br>
-
-<a href="https://flick.d3l.tech">
-  <img src="https://status.d3l.tech/badge/flick/dot?animate=ping" width="14" height="14" alt="Live status">
-  &nbsp;<b>Try it live now → flick.d3l.tech</b>
-</a>
-
-<br>
-
-<sub>Free hosted server · no account, no setup needed</sub>
 
 </div>
 
