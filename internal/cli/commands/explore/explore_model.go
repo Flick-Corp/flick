@@ -43,10 +43,14 @@ type exploreNode struct {
 
 // exploreRow: one visible line of the flattened tree.
 type exploreRow struct {
-	node     *exploreNode
-	prefix   string
-	parentID string // folder id this row sits in ("" = group root)
+	node        *exploreNode
+	prefix      string
+	parentID    string
+	placeholder bool
 }
+
+// emptyMarker: the shared node backing the "(empty)" placeholder.
+var emptyMarker = &exploreNode{name: "(empty)"}
 
 // pickerItem: one entry of the local file picker.
 type pickerItem struct {

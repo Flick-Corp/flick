@@ -34,6 +34,34 @@ func childrenFrom(folders []exploreFolder, files []exploreFile) []*exploreNode {
 	return out
 }
 
+// preserveExpansion: Carry the expanded/loaded state and already-loaded children
+// of the previous nodes onto the freshly reloaded ones, matched by id, so that
+// reloading a level (after an upload or a new folder) does not collapse the
+// folders the user had open.
+//
+// Params:
+// - old ([]*exploreNode): The nodes before the reload.
+// - fresh ([]*exploreNode): The newly fetched nodes for the same level.
+//
+// Returns:
+// - result1 ([]*exploreNode): fresh, with expansion state carried over.
+func preserveExpansion(old, fresh []*exploreNode) []*exploreNode {
+	for _, n := range fresh {
+		if !n.isFolder {
+			continue
+		}
+		for _, o := range old {
+			if o.isFolder && o.id == n.id {
+				n.expanded = o.expanded
+				n.loaded = o.loaded
+				n.children = o.children
+				break
+			}
+		}
+	}
+	return fresh
+}
+
 // findNode: Find the folder node carrying the given id in the tree.
 //
 // Params:
@@ -78,6 +106,18 @@ func (m *exploreModel) rebuild() {
 
 			m.rows = append(m.rows, exploreRow{node: n, prefix: prefix.String(), parentID: parentID})
 			if n.isFolder && n.expanded {
+				if len(n.children) == 0 {
+					var p strings.Builder
+					for _, parentLast := range append(ancestorsLast, last) {
+						if parentLast {
+							p.WriteString("    ")
+						} else {
+							p.WriteString("│   ")
+						}
+					}
+					p.WriteString("└── ")
+					m.rows = append(m.rows, exploreRow{node: emptyMarker, prefix: p.String(), parentID: n.id, placeholder: true})
+				}
 				walk(n.children, append(ancestorsLast, last), n.id)
 			}
 		}
@@ -92,9 +132,7 @@ func (m *exploreModel) rebuild() {
 	}
 }
 
-// targetFolder: The group folder an action applies to. It uses the folder level
-// that contains the highlighted row, except when the highlighted row is the
-// currently opened folder itself (notably an empty folder).
+// targetFolder: The group folder an action (upload, new folder) applies to.
 //
 // Returns:
 // - result1 (string): The target folder id, or "" for the group root.
@@ -102,12 +140,7 @@ func (m exploreModel) targetFolder() string {
 	if len(m.rows) == 0 {
 		return m.currentID
 	}
-
-	row := m.rows[m.cursor]
-	if row.node.isFolder && row.node.id == m.currentID {
-		return row.node.id
-	}
-	return row.parentID
+	return m.rows[m.cursor].parentID
 }
 
 // loadPicker: List the visible entries of a local directory for the picker.

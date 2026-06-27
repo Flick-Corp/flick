@@ -19,14 +19,41 @@ import (
 // Returns:
 // - result1 (string): The rendered view.
 func (m exploreModel) View() string {
+	var out string
 	switch m.mode {
 	case modeGroups:
-		return m.viewGroups()
+		out = m.viewGroups()
 	case modePicker:
-		return m.viewPicker()
+		out = m.viewPicker()
 	default:
-		return m.viewTree()
+		out = m.viewTree()
 	}
+	if m.width > 0 {
+		out = lipgloss.NewStyle().MaxWidth(m.width).Render(out)
+	}
+	if m.height > 0 {
+		out = lipgloss.NewStyle().Height(m.height).MaxHeight(m.height).Render(out)
+	}
+	return out
+}
+
+// chrome: Compute how many terminal lines the non-item parts of a screen occupy
+// (fixed title/blank lines plus the help and status blocks) so the item list is
+// trimmed enough to always leave room for the footer.
+//
+// Params:
+// - fixed (int): Fixed chrome lines (title, blanks, blank-before-help).
+// - help (string): The help bar text.
+// - status (string): The status line, empty when absent.
+//
+// Returns:
+// - result1 (int): The number of lines to reserve.
+func (m exploreModel) chrome(fixed int, help, status string) int {
+	r := fixed + lipgloss.Height(help)
+	if status != "" {
+		r += lipgloss.Height(status)
+	}
+	return r + 1 // safety margin to dodge the alt-screen bottom-row clip
 }
 
 // visibleRange: Compute the visible slice of items centred around the cursor
@@ -42,7 +69,7 @@ func (m exploreModel) View() string {
 // - start (int): First index of the visible slice (inclusive).
 // - end (int): Last index of the visible slice (exclusive).
 func (m exploreModel) visibleRange(count, cursor, reserve int) (start, end int) {
-	if m.height == 0 || count <= reserve {
+	if m.height == 0 {
 		return 0, count
 	}
 	max := m.height - reserve
@@ -74,10 +101,8 @@ func (m exploreModel) viewGroups() string {
 	if len(m.groups) == 0 {
 		out += exploreCrumbStyle.Render("You don't belong to any group.") + "\n"
 	}
-	reserve := 4 // title(1) + blank(1) + blank-before-help(1) + help(1)
-	if m.status != "" {
-		reserve++ // status line
-	}
+	help := "↑/↓ move · → open group · q quit"
+	reserve := m.chrome(3, help, m.status) // title + blank + blank-before-help
 	start, end := m.visibleRange(len(m.groups), m.groupCursor, reserve)
 	for i := start; i < end; i++ {
 		g := m.groups[i]
@@ -87,7 +112,7 @@ func (m exploreModel) viewGroups() string {
 		}
 		out += "  " + style.Render(fmt.Sprintf("%s (%s)", g.Name, g.Role)) + "\n"
 	}
-	out += "\n" + exploreHelpStyle.Render("↑/↓ move · → open group · q quit")
+	out += "\n" + exploreHelpStyle.Render(help)
 	return appendStatus(out, m.status)
 }
 
@@ -99,60 +124,63 @@ func (m exploreModel) viewTree() string {
 	out := exploreTitleStyle.Render("flick - "+m.groupName) + "\n\n"
 
 	if m.creating {
-		// Layout: title(1) + blank(1) + items + blank(1) + prompt(1) + help(1) = 5
-		start, end := m.visibleRange(len(m.rows), m.cursor, 5)
+		help := "type a name · enter create · esc cancel"
+		start, end := m.visibleRange(len(m.rows), m.cursor, m.chrome(4, help, ""))
 		for i := start; i < end; i++ {
-			row := m.rows[i]
-			name := row.node.name
-			if row.node.isFolder {
-				name += "/"
-			}
-			style := lipgloss.NewStyle()
-			if row.node.isFolder {
-				style = style.Foreground(exploreFolderClr)
-			}
-			if i == m.cursor {
-				style = style.Bold(true)
-			}
-			out += exploreTreeStyle.Render(row.prefix) + style.Render(name) + "\n"
+			out += m.renderRow(i)
 		}
 		out += "\n" + "New folder: " + m.nameInput + "▌\n"
-		out += exploreHelpStyle.Render("type a name · enter create · esc cancel")
+		out += exploreHelpStyle.Render(help)
 		return appendStatus(out, "")
-	}
-
-	reserve := 4 // title(1) + blank(1) + blank-before-help(1) + help(1)
-	if m.status != "" {
-		reserve++ // status line
-	}
-	start, end := m.visibleRange(len(m.rows), m.cursor, reserve)
-	for i := start; i < end; i++ {
-		row := m.rows[i]
-		name := row.node.name
-		if row.node.isFolder {
-			name += "/"
-		}
-
-		style := lipgloss.NewStyle()
-		if row.node.isFolder {
-			style = style.Foreground(exploreFolderClr)
-		}
-		if i == m.cursor {
-			style = style.Bold(true)
-		}
-
-		out += exploreTreeStyle.Render(row.prefix) + style.Render(name) + "\n"
-	}
-	if len(m.rows) == 0 && m.status == "" {
-		out += exploreCrumbStyle.Render("Empty group.") + "\n"
 	}
 
 	help := "↑/↓ move · → open · ← close · d download · esc groups · q quit"
 	if m.canManage() {
 		help = "↑/↓ move · → open · ← close · d download · u upload · n new folder · x delete · esc groups · q quit"
 	}
+	reserve := m.chrome(3, help, m.status) // title + blank + blank-before-help
+	start, end := m.visibleRange(len(m.rows), m.cursor, reserve)
+	for i := start; i < end; i++ {
+		out += m.renderRow(i)
+	}
+	if len(m.rows) == 0 && m.status == "" {
+		out += exploreCrumbStyle.Render("Empty group.") + "\n"
+	}
+
 	out += "\n" + exploreHelpStyle.Render(help)
 	return appendStatus(out, m.status)
+}
+
+// renderRow: Render a single flattened tree row (its prefix plus name), styling
+// folders, the cursor line and the non-selectable "(empty)" placeholder.
+//
+// Params:
+// - i (int): Index of the row in m.rows.
+//
+// Returns:
+// - result1 (string): The rendered line, newline terminated.
+func (m exploreModel) renderRow(i int) string {
+	row := m.rows[i]
+	if row.placeholder {
+		mark := exploreCrumbStyle.Render(row.node.name)
+		if i == m.cursor {
+			mark = lipgloss.NewStyle().Bold(true).Render(row.node.name)
+		}
+		return exploreTreeStyle.Render(row.prefix) + mark + "\n"
+	}
+
+	name := row.node.name
+	if row.node.isFolder {
+		name += "/"
+	}
+	style := lipgloss.NewStyle()
+	if row.node.isFolder {
+		style = style.Foreground(exploreFolderClr)
+	}
+	if i == m.cursor {
+		style = style.Bold(true)
+	}
+	return exploreTreeStyle.Render(row.prefix) + style.Render(name) + "\n"
 }
 
 // viewPicker: Render the local file picker screen.
@@ -163,10 +191,8 @@ func (m exploreModel) viewPicker() string {
 	out := exploreTitleStyle.Render("flick - pick files to upload") + "\n"
 	out += exploreCrumbStyle.Render(m.pickerDir) + "\n\n"
 
-	reserve := 5 // title(1) + crumb(1) + blank(1) + blank-before-help(1) + help(1)
-	if m.status != "" {
-		reserve++ // status line
-	}
+	help := "↑/↓ move · → enter dir · ← parent · space select · enter upload · esc cancel"
+	reserve := m.chrome(4, help, m.status) // title + crumb + blank + blank-before-help
 	start, end := m.visibleRange(len(m.pickerItems), m.pickerCursor, reserve)
 	for i := start; i < end; i++ {
 		item := m.pickerItems[i]
@@ -187,7 +213,7 @@ func (m exploreModel) viewPicker() string {
 		}
 		out += "  " + style.Render(name) + "\n"
 	}
-	out += "\n" + exploreHelpStyle.Render("↑/↓ move · → enter dir · ← parent · space select · enter upload · esc cancel")
+	out += "\n" + exploreHelpStyle.Render(help)
 	return appendStatus(out, m.status)
 }
 
