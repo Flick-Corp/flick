@@ -46,13 +46,13 @@ func (m exploreModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.status = ""
 		m.currentID = msg.folderID
 		if msg.folderID == "" {
-			m.roots = children
+			m.roots = preserveExpansion(m.roots, children)
 			if m.mode != modeTree {
 				m.cursor = 0
 			}
 			m.mode = modeTree
 		} else if node := findNode(m.roots, msg.folderID); node != nil {
-			node.children = children
+			node.children = preserveExpansion(node.children, children)
 			node.loaded = true
 			node.expanded = true
 		}
@@ -194,7 +194,7 @@ func (m exploreModel) openNode() (tea.Model, tea.Cmd) {
 // - result1 (tea.Model): The updated model.
 // - result2 (tea.Cmd): The next command, if any.
 func (m exploreModel) downloadNode() (tea.Model, tea.Cmd) {
-	if len(m.rows) == 0 {
+	if len(m.rows) == 0 || m.rows[m.cursor].placeholder {
 		return m, nil
 	}
 	node := m.rows[m.cursor].node
@@ -252,16 +252,23 @@ func (m exploreModel) handleTree(key tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "d":
 		return m.downloadNode()
 	case "left", "h":
-		if m.currentID == "" {
+		if len(m.rows) == 0 {
 			return m.returnToGroups(), nil
 		}
-		if len(m.rows) == 0 {
+		row := m.rows[m.cursor]
+		if row.node.isFolder && row.node.expanded {
+			row.node.expanded = false
+			m.rebuild()
 			return m, nil
 		}
-		node := m.rows[m.cursor].node
-		if node.isFolder && node.expanded {
-			node.expanded = false
-			m.rebuild()
+		if row.parentID == "" {
+			return m.returnToGroups(), nil
+		}
+		for i := range m.rows {
+			if m.rows[i].node.id == row.parentID {
+				m.cursor = i
+				break
+			}
 		}
 	case "u":
 		if !m.canManage() {
@@ -296,7 +303,7 @@ func (m exploreModel) handleTree(key tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.status = exploreErrStyle.Render("Only a maintainer/owner can delete")
 			return m, nil
 		}
-		if len(m.rows) == 0 {
+		if len(m.rows) == 0 || m.rows[m.cursor].placeholder {
 			return m, nil
 		}
 		row := m.rows[m.cursor]
