@@ -12,7 +12,6 @@ import (
 	"net/http"
 
 	"github.com/Flick-Corp/flick/internal/api/database"
-	"github.com/Flick-Corp/flick/internal/api/path"
 	"github.com/Flick-Corp/flick/internal/api/quota"
 	"github.com/Flick-Corp/flick/internal/api/routes"
 	"github.com/Flick-Corp/flick/internal/api/routes/account"
