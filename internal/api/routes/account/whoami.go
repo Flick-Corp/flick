@@ -13,7 +13,6 @@ import (
 	"net/http"
 
 	"github.com/Flick-Corp/flick/internal/api/database"
-	"github.com/Flick-Corp/flick/internal/api/memberships"
 	"github.com/Flick-Corp/flick/internal/api/routes"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5"
@@ -91,8 +90,6 @@ func WhoamiHandler(queries *database.Queries) http.HandlerFunc {
 				Email:     user.Email,
 				Role:      user.Role,
 				CreatedAt: user.CreatedAt,
-				Blocked:   user.Blocked,
-				Groups:    memberships.UserGroupMemberships(r.Context(), queries, user.ID),
 			},
 		})
 	}
