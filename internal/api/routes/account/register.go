@@ -30,13 +30,11 @@ type RegisterRequest struct {
 
 // RegisterResponse: The JSON body returned on a successful registration.
 type RegisterResponse struct {
-	ID        pgtype.UUID                   `json:"id"`
-	Username  string                        `json:"username"`
-	Email     string                        `json:"email"`
-	Role      database.UserRole             `json:"role"`
-	CreatedAt pgtype.Timestamptz            `json:"created_at"`
-	Blocked   bool                          `json:"blocked"`
-	Groups    []memberships.GroupMembershipResponse `json:"groups,omitempty"`
+	ID        pgtype.UUID        `json:"id"`
+	Username  string             `json:"username"`
+	Email     string             `json:"email"`
+	Role      database.UserRole  `json:"role"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 // RegisterHandler: Register function route.

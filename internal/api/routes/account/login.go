@@ -107,8 +107,6 @@ func LoginHandler(queries *database.Queries) http.HandlerFunc {
 				Email:     user.Email,
 				Role:      user.Role,
 				CreatedAt: user.CreatedAt,
-				Blocked:   user.Blocked,
-				Groups:    memberships.UserGroupMemberships(r.Context(), queries, user.ID),
 			},
 		})
 	}
