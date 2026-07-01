@@ -56,31 +56,33 @@ func buildMetadata(in uploadInput) (*metadata.Metadata, bool) {
 
 	if in.IsGroup {
 		m.MaxDownloadCount = 0
-		if !metadata.SetGroupID(m, in.GroupID) {
+		if !m.SetGroupID(in.GroupID) {
 			return nil, false
 		}
 	} else {
-		if !metadata.SetUploaderID(m, in.ResolvedUploader) {
+		if !m.SetUploaderID(in.ResolvedUploader) {
 			return nil, false
 		}
-		if !metadata.SetMaxDownloadCount(m, in.MaxDownloadCount) {
+		if !m.SetMaxDownloadCount(in.MaxDownloadCount) {
 			return nil, false
 		}
-		if !metadata.SetPassword(m, in.Password) {
-			return nil, false
+		if in.Password != "" {
+			if !m.SetPassword(in.Password) {
+				return nil, false
+			}
 		}
 	}
 
-	if !metadata.SetExpiration(m, in.Expiration) {
+	if !m.SetExpiration(in.Expiration) {
 		return nil, false
 	}
-	if !metadata.SetChecksum(m, in.Checksum) {
+	if !m.SetChecksum(in.Checksum) {
 		return nil, false
 	}
-	if !metadata.SetMessage(m, in.Message) {
+	if !m.SetMessage(in.Message) {
 		return nil, false
 	}
-	metadata.SetEncrypted(m, in.Encrypted)
+	m.SetEncrypted(in.Encrypted)
 
 	return m, true
 }
@@ -126,7 +128,7 @@ func finalizeUpload(ctx context.Context, queries *database.Queries, in uploadInp
 		return "", fmt.Errorf("cannot create directory for code %q: %w", shareCode, err)
 	}
 
-	metadata.CreateMetadataFile(*m, codeDir+"/", shareCode)
+	metadata.CreateMetadataFile(*m, shareCode)
 
 	dst := filepath.Join(codeDir, filepath.Base(in.Filename))
 	if err := os.Rename(assembledPath, dst); err != nil {

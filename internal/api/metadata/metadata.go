@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Flick-Corp/flick/internal/api/logging"
+	"github.com/Flick-Corp/flick/internal/api/path"
 	"github.com/Flick-Corp/flick/internal/api/serverconfig"
 	"github.com/Flick-Corp/flick/internal/api/utils"
 	"github.com/Flick-Corp/flick/internal/api/utils/data"
@@ -53,6 +54,17 @@ type Metadata struct {
 // maxMessageLen for the message of the code.
 const maxMessageLen int = 500
 
+// GetMetadataJSONPath: Build the on-disk path of a code's metadata JSON file.
+//
+// Params:
+// - code (string): The share code whose metadata path to build.
+//
+// Returns:
+// - result1 (string): The full path to the code's metadata JSON file.
+func GetMetadataJSONPath(code string) string {
+	return path.GetDataDir() + code + "/." + code + "-metadata.json"
+}
+
 // LoadMetadata: Read and decode the metadata file of a given code.
 //
 // Params:
@@ -64,9 +76,8 @@ const maxMessageLen int = 500
 // - result2 (error): An error if occured.
 func LoadMetadata(dataDir string, code string) (Metadata, error) {
 	var meta Metadata
-	metadataPath := dataDir + code + "/." + code + "-metadata.json"
 
-	file, err := os.Open(metadataPath)
+	file, err := os.Open(GetMetadataJSONPath(code))
 	if err != nil {
 		return meta, err
 	}
@@ -76,14 +87,14 @@ func LoadMetadata(dataDir string, code string) (Metadata, error) {
 	return meta, err
 }
 
-// createMetadataFile: Creates the metadata file containing the expiration date.
+// CreateMetadataFile: Marshal the given metadata and persist it on disk as the
+// code's metadata JSON file, at the path derived from the share code.
 //
 // Params:
 // - metadata (Metadata): The metadata informations.
-// - filepath (string): The filepath to the metadata location.
 // - code (string): The generated share code.
-func CreateMetadataFile(metadata Metadata, filepath string, code string) {
-	metadataPath := filepath + "." + code + "-metadata.json"
+func CreateMetadataFile(metadata Metadata, code string) {
+	metadataPath := GetMetadataJSONPath(code)
 
 	data, err := json.Marshal(metadata)
 	if err != nil {
@@ -102,12 +113,11 @@ func CreateMetadataFile(metadata Metadata, filepath string, code string) {
 // SetExpiration: Defines the expiration date based on the received pattern.
 //
 // Params:
-// - metadata (*Metadata): The metadata to set the expiration.
 // - exp (string): The duration of the expiration.
 //
 // Returns:
 // - result1 (bool): Return true if the metadata has been changed, else false.
-func SetExpiration(metadata *Metadata, exp string) bool {
+func (m *Metadata) SetExpiration(exp string) bool {
 	duration, err := utils.ParseExpirationTime(exp)
 
 	if err != nil {
@@ -123,23 +133,29 @@ func SetExpiration(metadata *Metadata, exp string) bool {
 		logging.LogInfoError("Expiration time %q is in the past", exp)
 		return false
 	}
-	if !checkConfigTime(duration) {
+
+	maxExp, err := utils.ParseExpirationTime(serverconfig.Conf.MaxExpiration)
+	if err != nil {
+		logging.LogInfoError("Cannot parse max expiration time %q from configuration: %v", serverconfig.Conf.MaxExpiration, err)
+		return false
+	}
+	if !duration.Before(maxExp.Add(time.Second)) {
 		logging.LogInfoError("Expiration time %q exceeds the maximum allowed by configuration", exp)
 		return false
 	}
-	metadata.Expiration = duration.Format(time.RFC3339)
+
+	m.Expiration = duration.Format(time.RFC3339)
 	return true
 }
 
 // SetMaxDownloadCount: Defines the max download count based on the received pattern.
 //
 // Params:
-// - metadata (*Metadata): The metadata to modify.
 // - maxDownloadCount (string): The max download count string.
 //
 // Returns:
 // - result1 (bool): Return true if the metadata has been changed, else false.
-func SetMaxDownloadCount(metadata *Metadata, maxDownloadCount string) bool {
+func (m *Metadata) SetMaxDownloadCount(maxDownloadCount string) bool {
 	mdc, err := strconv.Atoi(maxDownloadCount)
 	if err != nil {
 		logging.LogInfoError("Cannot parse max download count %q: %v", maxDownloadCount, err)
@@ -161,7 +177,7 @@ func SetMaxDownloadCount(metadata *Metadata, maxDownloadCount string) bool {
 		return false
 	}
 
-	metadata.MaxDownloadCount = int32(mdc)
+	m.MaxDownloadCount = int32(mdc)
 	return true
 }
 
@@ -170,18 +186,17 @@ func SetMaxDownloadCount(metadata *Metadata, maxDownloadCount string) bool {
 // database by the caller.
 //
 // Params:
-// - metadata (*Metadata): The metadata to modify.
 // - uploaderID (string): The validated uploader UUID.
 //
 // Returns:
 // - result1 (bool): Return true if the metadata has been changed, else false.
-func SetUploaderID(metadata *Metadata, uploaderID string) bool {
+func (m *Metadata) SetUploaderID(uploaderID string) bool {
 	if uploaderID == "" {
 		logging.LogInfoError("Uploader id is required")
 		return false
 	}
 
-	metadata.UploaderID = uploaderID
+	m.UploaderID = uploaderID
 	return true
 }
 
@@ -190,31 +205,18 @@ func SetUploaderID(metadata *Metadata, uploaderID string) bool {
 // The id is expected to be already validated against the database by the caller.
 //
 // Params:
-// - metadata (*Metadata): The metadata to modify.
 // - groupID (string): The validated group UUID.
 //
 // Returns:
 // - result1 (bool): Return true if the metadata has been changed, else false.
-func SetGroupID(metadata *Metadata, groupID string) bool {
+func (m *Metadata) SetGroupID(groupID string) bool {
 	if groupID == "" {
 		logging.LogInfoError("Group id is required")
 		return false
 	}
 
-	metadata.GroupID = groupID
+	m.GroupID = groupID
 	return true
-}
-
-// IsGroupBound: Report whether a code is private to a group, and therefore must
-// not be served by the public download endpoint.
-//
-// Params:
-// - metadata (*Metadata): The metadata to inspect.
-//
-// Returns:
-// - result1 (bool): True when the code belongs to a group.
-func IsGroupBound(metadata *Metadata) bool {
-	return metadata.GroupID != ""
 }
 
 // SetChecksum: Defines the BLAKE3 checksum of the uploaded archive, as computed
@@ -222,18 +224,17 @@ func IsGroupBound(metadata *Metadata) bool {
 // receives are intact. A missing or malformed digest is rejected.
 //
 // Params:
-// - metadata (*Metadata): The metadata to modify.
 // - sum (string): The hex-encoded BLAKE3 digest sent by the client.
 //
 // Returns:
 // - result1 (bool): Return true if the metadata has been changed, else false.
-func SetChecksum(metadata *Metadata, sum string) bool {
+func (m *Metadata) SetChecksum(sum string) bool {
 	if !checksum.IsValidHex(sum) {
 		logging.LogInfoError("Invalid or missing checksum %q", sum)
 		return false
 	}
 
-	metadata.Checksum = sum
+	m.Checksum = sum
 	return true
 }
 
@@ -241,19 +242,18 @@ func SetChecksum(metadata *Metadata, sum string) bool {
 // to see.
 //
 // Params:
-// - metadata (*Metadata): The metadata to modify.
 // - message (string): The note chosen by the uploader, or empty for none.
 //
 // Returns:
 // - result1 (bool): Return true if the message is acceptable, else false.
-func SetMessage(metadata *Metadata, message string) bool {
+func (m *Metadata) SetMessage(message string) bool {
 	message = strings.TrimSpace(message)
 	if len(message) > maxMessageLen {
 		logging.LogInfoError("Message is too long (%d > %d)", len(message), maxMessageLen)
 		return false
 	}
 
-	metadata.Message = message
+	m.Message = message
 	return true
 }
 
@@ -261,96 +261,55 @@ func SetMessage(metadata *Metadata, message string) bool {
 // declared by the client through the X-Flick-Encrypted header.
 //
 // Params:
-// - metadata (*Metadata): The metadata to modify.
 // - encrypted (bool): True when the client encrypted the archive before upload.
-func SetEncrypted(metadata *Metadata, encrypted bool) {
-	metadata.Encrypted = encrypted
+//
+// Returns:
+// - result1 (bool): Return true if the metadata has been changed, else false.
+func (m *Metadata) SetEncrypted(encrypted bool) bool {
+	m.Encrypted = encrypted
+	return true
 }
 
 // SetPassword: Protect the code with a download password. The plaintext password
 // is hashed with Argon2id and only the "salt$hash" is stored, so the server
-// never keeps the password itself. An empty password leaves the code public.
+// never keeps the password itself. This must only be called when a non-empty
+// password was supplied.
 //
 // Params:
-// - metadata (*Metadata): The metadata to modify.
-// - password (string): The plaintext password chosen by the uploader, or empty.
-func SetPassword(metadata *Metadata, password string) bool {
-	if password == "" {
-		return true
-	}
-
+// - password (string): The plaintext password chosen by the uploader.
+//
+// Returns:
+// - result1 (bool): Return true if the metadata has been changed, else false.
+func (m *Metadata) SetPassword(password string) bool {
 	salt := make([]byte, pwSaltLen)
 	if _, err := rand.Read(salt); err != nil {
 		logging.LogInfoError("Cannot generate password salt: %v", err)
 		return false
 	}
+
 	hash := argon2.IDKey([]byte(password), salt, pwArgonTime, pwArgonMemory, pwArgonThreads, pwArgonKeyLen)
-	metadata.PasswordHash = fmt.Sprintf("%s$%s",
+	m.PasswordHash = fmt.Sprintf("%s$%s",
 		base64.RawStdEncoding.EncodeToString(salt),
 		base64.RawStdEncoding.EncodeToString(hash))
 	return true
 }
 
-// IsPasswordProtected: Report whether a download password guards this code.
-//
-// Params:
-// - metadata (*Metadata): The metadata to inspect.
-//
-// Returns:
-// - result1 (bool): True when a password must be supplied to download.
-func IsPasswordProtected(metadata *Metadata) bool {
-	return metadata.PasswordHash != ""
-}
-
-// CheckPassword: Verify a candidate password against the stored Argon2id hash. A
-// code with no password always passes, so callers can use this as the single
-// access gate regardless of whether protection is enabled.
-//
-// Params:
-// - metadata (*Metadata): The metadata holding the stored hash.
-// - password (string): The candidate password supplied by the downloader.
-//
-// Returns:
-// - result1 (bool): True when access is granted.
-func CheckPassword(metadata *Metadata, password string) bool {
-	if metadata.PasswordHash == "" {
-		return true
-	}
-
-	parts := strings.Split(metadata.PasswordHash, "$")
-	if len(parts) != 2 {
-		return false
-	}
-	salt, err := base64.RawStdEncoding.DecodeString(parts[0])
-	if err != nil {
-		return false
-	}
-	expected, err := base64.RawStdEncoding.DecodeString(parts[1])
-	if err != nil {
-		return false
-	}
-
-	hash := argon2.IDKey([]byte(password), salt, pwArgonTime, pwArgonMemory, pwArgonThreads, pwArgonKeyLen)
-	return subtle.ConstantTimeCompare(hash, expected) == 1
-}
-
-// CheckExpirationToRemove: Will check and remove every expired files/folders.
-//
-// Params:
-// - dataDir (string): The data directory.
+// CheckExpirationToRemove: Walk every code folder in the data directory, decode
+// each code's metadata file and delete the folders whose expiration date is in the past.
 //
 // Returns:
 // - result1 (error): An error if occured.
-func CheckExpirationToRemove(dataDir string) error {
+func CheckExpirationToRemove() error {
+	dataDir := path.GetDataDir()
 	content, err := os.ReadDir(dataDir)
 	if err != nil {
 		return err
 	}
 
-	for _, entries := range content {
-		if entries.IsDir() {
-			code := entries.Name()
-			file, err := os.Open(dataDir + code + "/." + code + "-metadata.json")
+	for _, entry := range content {
+		if entry.IsDir() {
+			code := entry.Name()
+			file, err := os.Open(GetMetadataJSONPath(code))
 			if err != nil {
 				continue
 			}
@@ -368,26 +327,56 @@ func CheckExpirationToRemove(dataDir string) error {
 				continue
 			}
 			if time.Now().After(dateExp) {
-				data.DeleteDataDirWithCode(entries.Name())
+				data.DeleteDataDirWithCode(entry.Name())
 			}
 		}
 	}
 	return nil
 }
 
-// checkConfigTime: Checks that the duration set by the user is in config bounds.
-//
-// Params:
-// - duration (time.Time): The duration passed by the user.
+// IsGroupCode: Return if the code is private to a group.
 //
 // Returns:
-// - result1 (bool): True if in config bounds, else false.
-func checkConfigTime(duration time.Time) bool {
-	maxExp, err := utils.ParseExpirationTime(serverconfig.Conf.MaxExpiration)
+// - result1 (bool): True when the code belongs to a group.
+func (m *Metadata) IsGroupCode() bool {
+	return m.GroupID != ""
+}
+
+// IsPasswordProtected: Report whether a download password guards this code.
+//
+// Returns:
+// - result1 (bool): True when a password must be supplied to download.
+func (m *Metadata) IsPasswordProtected() bool {
+	return m.PasswordHash != ""
+}
+
+// VerifyCodePassword: Verify a candidate password against the stored Argon2id
+// hash. A code with no password always passes, so callers can use this as the
+// single access gate regardless of whether protection is enabled.
+//
+// Params:
+// - password (string): The candidate password supplied by the downloader.
+//
+// Returns:
+// - result1 (bool): True when access is granted.
+func (m *Metadata) VerifyCodePassword(password string) bool {
+	if m.PasswordHash == "" {
+		return true
+	}
+
+	parts := strings.Split(m.PasswordHash, "$")
+	if len(parts) != 2 {
+		return false
+	}
+	salt, err := base64.RawStdEncoding.DecodeString(parts[0])
 	if err != nil {
-		logging.LogInfoError("Cannot parse max expiration time %q from configuration: %v", serverconfig.Conf.MaxExpiration, err)
+		return false
+	}
+	expectedHash, err := base64.RawStdEncoding.DecodeString(parts[1])
+	if err != nil {
 		return false
 	}
 
-	return duration.Before(maxExp.Add(time.Second))
+	hash := argon2.IDKey([]byte(password), salt, pwArgonTime, pwArgonMemory, pwArgonThreads, pwArgonKeyLen)
+	return subtle.ConstantTimeCompare(hash, expectedHash) == 1
 }

@@ -29,7 +29,7 @@ func InitCodeCache() error {
 	Cache = cache.New(1*time.Hour, 1*time.Minute)
 	Cache.OnEvicted(func(key string, value any) {
 		_ = SaveCacheManagerFile(path.GetCacheFile())
-		metadata.CheckExpirationToRemove(path.GetDataDir())
+		metadata.CheckExpirationToRemove()
 	})
 	return LoadCacheManagerFile(path.GetCacheFile())
 }
@@ -91,7 +91,7 @@ func DeleteCode(code string) error {
 		return err
 	}
 	_ = SaveCacheManagerFile(path.GetCacheFile())
-	metadata.CheckExpirationToRemove(path.GetDataDir())
+	metadata.CheckExpirationToRemove()
 	return nil
 }
 

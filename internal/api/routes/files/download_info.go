@@ -79,7 +79,7 @@ func DownloadInfoHandler(queries *database.Queries) http.HandlerFunc {
 
 		meta, metaErr := metadata.LoadMetadata(path.GetDataDir(), code)
 
-		if metaErr == nil && metadata.IsGroupBound(&meta) {
+		if metaErr == nil && meta.IsGroupCode() {
 			var groupID pgtype.UUID
 			if err := groupID.Scan(meta.GroupID); err != nil {
 				routes.WriteError(w, http.StatusNotFound, "Code not found")
@@ -91,14 +91,14 @@ func DownloadInfoHandler(queries *database.Queries) http.HandlerFunc {
 			}
 		}
 
-		passwordProtected := metaErr == nil && metadata.IsPasswordProtected(&meta)
+		passwordProtected := metaErr == nil && meta.IsPasswordProtected()
 
 		message := ""
 		if metaErr == nil {
 			message = meta.Message
 		}
 
-		if passwordProtected && !metadata.CheckPassword(&meta, r.Header.Get("X-Flick-Password")) {
+		if passwordProtected && !meta.VerifyCodePassword(r.Header.Get("X-Flick-Password")) {
 			var total int64
 			for _, entry := range entries {
 				if entry.Name() == metadataFilename {
