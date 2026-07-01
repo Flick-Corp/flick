@@ -29,7 +29,6 @@ import (
 // Params:
 // - code (string): The code to update.
 func onDownloadFinished(code string) {
-	metadataPath := path.GetDataDir() + "/" + code + "/"
 	meta, err := metadata.LoadMetadata(path.GetDataDir(), code)
 	if err != nil {
 		logging.LogInfoError("Cannot load metadata file for code %q: %v", code, err)
@@ -44,7 +43,7 @@ func onDownloadFinished(code string) {
 		return
 	}
 	meta.CurrentDownloadCount += 1
-	metadata.CreateMetadataFile(meta, metadataPath, code)
+	metadata.CreateMetadataFile(meta, code)
 }
 
 // doDownloadMultipartForm: Do the download request.
@@ -123,7 +122,7 @@ func DownloadFileHandler(queries *database.Queries) http.HandlerFunc {
 			logging.LogInfoError("Cannot load metadata for code %q: %v", code, metaErr)
 		}
 
-		if metaErr == nil && metadata.IsGroupBound(&meta) {
+		if metaErr == nil && meta.IsGroupCode() {
 			var groupID pgtype.UUID
 			if err := groupID.Scan(meta.GroupID); err != nil {
 				routes.WriteError(w, http.StatusNotFound, "Code not found")
@@ -135,7 +134,7 @@ func DownloadFileHandler(queries *database.Queries) http.HandlerFunc {
 			}
 		}
 
-		if metaErr == nil && !metadata.CheckPassword(&meta, r.Header.Get("X-Flick-Password")) {
+		if metaErr == nil && !meta.VerifyCodePassword(r.Header.Get("X-Flick-Password")) {
 			routes.WriteError(w, http.StatusUnauthorized, "Invalid or missing password")
 			return
 		}
