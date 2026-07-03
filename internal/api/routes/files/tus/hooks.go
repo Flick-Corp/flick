@@ -21,8 +21,8 @@ import (
 	"github.com/Flick-Corp/flick/internal/api/logging"
 	"github.com/Flick-Corp/flick/internal/api/quota"
 	"github.com/Flick-Corp/flick/internal/api/routes"
-	"github.com/Flick-Corp/flick/internal/api/routes/files"
 	"github.com/Flick-Corp/flick/internal/api/serverconfig"
+	"github.com/Flick-Corp/flick/internal/api/uploader"
 	"github.com/Flick-Corp/flick/internal/utils/checksum"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -46,7 +46,7 @@ func preUploadCreate(queries *database.Queries) func(tusd.HookEvent) (tusd.HTTPR
 
 		newMeta := make(tusd.MetaData, len(hook.Upload.MetaData)+1)
 		maps.Copy(newMeta, hook.Upload.MetaData)
-		newMeta[metaKeyResolvedUploader] = in.ResolvedUploader
+		newMeta[metaKeyResolvedUploader] = in.ResolvedUploader.String()
 
 		return tusd.HTTPResponse{}, tusd.FileInfoChanges{MetaData: newMeta}, nil
 	}
@@ -97,7 +97,7 @@ func authorizeUpload(hook tusd.HookEvent, queries *database.Queries) (uploadInpu
 		if err != nil {
 			return in, tusd.NewError("ERR_FLICK_AUTH", err.Error(), status)
 		}
-		in.ResolvedUploader = caller.ID.String()
+		in.ResolvedUploader = caller.ID
 
 		if in.FolderID != "" {
 			var folderID pgtype.UUID
@@ -117,25 +117,25 @@ func authorizeUpload(hook tusd.HookEvent, queries *database.Queries) (uploadInpu
 		quotaUsed = used
 		quotaLimitMb = serverconfig.Conf.GroupQuotaMb
 	} else {
-		rawID, isAnonymous, blocked, err := files.ResolveUploaderByID(ctx, queries, hook.HTTPRequest.Header.Get("X-Flick-User-ID"))
+		up, err := uploader.ResolveUploaderByID(ctx, queries, hook.HTTPRequest.Header.Get("X-Flick-User-ID"))
 		if err != nil {
 			return in, tusd.NewError("ERR_FLICK_USER", "Invalid or unknown user", http.StatusBadRequest)
 		}
-		if blocked {
+		if up.Blocked {
 			return in, tusd.NewError("ERR_FLICK_BLOCKED", "Account blocked", http.StatusForbidden)
 		}
 		if in.MaxDownloadCount == "" {
 			return in, tusd.NewError("ERR_FLICK_MAXDL", "Missing max download count metadata", http.StatusBadRequest)
 		}
-		in.ResolvedUploader = rawID
+		in.ResolvedUploader = up.ID
 
-		used, err := quota.CalculateQuotaByUploaderID(rawID)
+		used, err := quota.CalculateQuotaByUploaderID(up.ID)
 		if err != nil {
 			return in, tusd.NewError("ERR_FLICK_QUOTA", "Cannot read user quota", http.StatusInternalServerError)
 		}
 		quotaUsed = used
 		quotaLimitMb = serverconfig.Conf.UserQuotaMb
-		if isAnonymous {
+		if up.IsAnonymous {
 			quotaLimitMb = serverconfig.Conf.AnonymousQuotaMb
 		}
 	}
@@ -171,7 +171,10 @@ func preFinishResponse(queries *database.Queries) func(tusd.HookEvent) (tusd.HTT
 
 		in := readUploadInput(hook.Upload.MetaData)
 		in.Size = hook.Upload.Size
-		in.ResolvedUploader = hook.Upload.MetaData[metaKeyResolvedUploader]
+		if err := in.ResolvedUploader.Scan(hook.Upload.MetaData[metaKeyResolvedUploader]); err != nil {
+			logging.LogInfoError("Invalid stored uploader id for tus upload %q: %v", hook.Upload.ID, err)
+			return tusd.HTTPResponse{}, tusd.NewError("ERR_FLICK_USER", "Invalid stored uploader", http.StatusInternalServerError)
+		}
 
 		// Verify the assembled archive matches the checksum the client announced.
 		actual, err := checksum.HashFile(assembledPath)

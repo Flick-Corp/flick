@@ -12,6 +12,7 @@ import (
 
 	"github.com/Flick-Corp/flick/internal/api/metadata"
 	"github.com/Flick-Corp/flick/internal/api/path"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // CalculateQuotaByGroupID: Walk the data directory and sum the stored size of every active
@@ -33,13 +34,13 @@ func CalculateQuotaByGroupID(groupID string) (int64, error) {
 // group, not the uploader, so they are excluded here.
 //
 // Params:
-// - uploaderID (string): The uploader UUID owning the transfers.
+// - uploaderID (pgtype.UUID): The uploader UUID owning the transfers.
 //
 // Returns:
 // - result1 (int64): The total bytes used by the uploader.
 // - result2 (error): An error if the data directory cannot be read.
-func CalculateQuotaByUploaderID(uploaderID string) (int64, error) {
-	return walkSum(path.GetDataDir(), uploaderID, "")
+func CalculateQuotaByUploaderID(uploaderID pgtype.UUID) (int64, error) {
+	return walkSum(path.GetDataDir(), uploaderID.String(), "")
 }
 
 // walkSum: Sum the stored size of transfers owned by either an uploader or a
