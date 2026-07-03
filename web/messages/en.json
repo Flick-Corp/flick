@@ -1,11 +1,4 @@
 {
-  "Seo": {
-    "siteTitle": "Flick: self-hosted, open-source file transfer",
-    "titleTemplate": "%s · Flick",
-    "description": "Flick is a free, open-source, self-hosted file transfer tool. Share files with a short code, set expiry and passwords, host it on your own server. No account required.",
-    "ogAlt": "Flick, self-hosted file transfer with a short code",
-    "keywords": "self-hosted file transfer, open source file transfer, send files with a code, private file sharing, self-hosted file sharing, secure file transfer, open source file sharing"
-  },
   "Landing": {
     "compar": {
       "eyebrow": "Why Flick",
@@ -46,11 +39,13 @@
       "q2": "Is Flick free and open source?",
       "a2": "Yes. Flick is free and fully open source. You can read the code, self-host it, and adapt it to your needs.",
       "q3": "Do I need an account to send a file?",
-      "a3": "No. Anyone can send files anonymously and share the generated code. Accounts are optional and only add groups, history and advanced controls.",
+      "a3": "No. Anyone can send files anonymously and share the generated code. Accounts are optional and add history and your personal shares.",
       "q4": "How do recipients download a file?",
       "a4": "They enter the short code you share (or open the link) and download from a clean web page. No install and no account needed.",
       "q5": "Can I control how long files stay available?",
-      "a5": "Yes. You can set an expiry, require a password and limit the number of downloads for each transfer."
+      "a5": "Yes. You can set an expiry, require a password and limit the number of downloads for each transfer.",
+      "q6": "Can I create groups on flick.d3l.tech?",
+      "a6": "No. On the public flick.d3l.tech instance, creating an account gives you history and your personal shares, but not group creation. Groups and advanced admin controls are only available when you self-host Flick on your own server."
     }
   },
   "Settings": {

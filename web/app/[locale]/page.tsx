@@ -1,23 +1,19 @@
 import { ArrowUpRight, Check } from "lucide-react"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { AsciinemaPlayer } from "@/components/asciinema-player"
 import { GithubIcon } from "@/components/icons"
-import { JsonLd } from "@/components/json-ld"
 import { MouseMist } from "@/components/mouse-mist"
 import { Button } from "@/components/ui/button"
 import { Link } from "@/i18n/navigation"
-import { localizedPath, SITE_NAME, SITE_URL } from "@/lib/seo"
 
 export default function Page() {
-  const locale = useLocale()
   const tHero = useTranslations("Hero")
   const tFeatures = useTranslations("Features")
   const tHow = useTranslations("HowItWorks")
   const tCTA = useTranslations("CallToAction")
   const tFooter = useTranslations("Footer")
   const tL = useTranslations("Landing")
-  const tSeo = useTranslations("Seo")
 
   const comparPoints = [
     { title: tL("compar.row.selfhosted.title"), body: tL("compar.row.selfhosted.body") },
@@ -34,37 +30,7 @@ export default function Page() {
     { q: tL("faq.q3"), a: tL("faq.a3") },
     { q: tL("faq.q4"), a: tL("faq.a4") },
     { q: tL("faq.q5"), a: tL("faq.a5") },
-  ]
-
-  const jsonLd = [
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      name: SITE_NAME,
-      url: localizedPath(locale, "/"),
-      applicationCategory: "Open-source self-hosted file transfer",
-      operatingSystem: "Linux, Docker, Web",
-      description: tSeo("description"),
-      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-      sameAs: ["https://github.com/Flick-Corp/flick"],
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: faqs.map((f) => ({
-        "@type": "Question",
-        name: f.q,
-        acceptedAnswer: { "@type": "Answer", text: f.a },
-      })),
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      name: SITE_NAME,
-      url: SITE_URL,
-      logo: `${SITE_URL}/assets/flick_logo.png`,
-      sameAs: ["https://github.com/Flick-Corp/flick"],
-    },
+    { q: tL("faq.q6"), a: tL("faq.a6") },
   ]
 
   const features = [
@@ -82,7 +48,6 @@ export default function Page() {
 
   return (
     <main className="relative mx-auto max-w-6xl px-6 pb-24">
-      <JsonLd data={jsonLd} />
       <MouseMist />
 
       <section className="flex flex-col items-center pt-20 text-center sm:pt-24">

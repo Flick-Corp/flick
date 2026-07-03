@@ -1,11 +1,4 @@
 {
-  "Seo": {
-    "siteTitle": "Flick : transfert de fichiers auto-hébergé et open source",
-    "titleTemplate": "%s · Flick",
-    "description": "Flick est un outil de transfert de fichiers libre, open-source et auto-hébergé. Partagez vos fichiers avec un code court, gérez l'expiration et les mots de passe, hébergez-le sur votre propre serveur. Sans compte.",
-    "ogAlt": "Flick, transfert de fichiers auto-hébergé avec un code court",
-    "keywords": "transfert de fichiers auto-hébergé, transfert de fichiers open source, envoyer des fichiers avec un code, partage de fichiers privé, partage de fichiers auto-hébergé, transfert de fichiers sécurisé, partage de fichiers open source"
-  },
   "Landing": {
     "compar": {
       "eyebrow": "Pourquoi Flick",
@@ -46,11 +39,13 @@
       "q2": "Flick est-il gratuit et open source ?",
       "a2": "Oui. Flick est gratuit et entièrement open source. Vous pouvez lire le code, l'héberger vous-même et l'adapter à vos besoins.",
       "q3": "Faut-il un compte pour envoyer un fichier ?",
-      "a3": "Non. N'importe qui peut envoyer des fichiers de façon anonyme et partager le code généré. Les comptes sont optionnels et n'ajoutent que les groupes, l'historique et les contrôles avancés.",
+      "a3": "Non. N'importe qui peut envoyer des fichiers de façon anonyme et partager le code généré. Les comptes sont optionnels et ajoutent l'historique et vos partages personnels.",
       "q4": "Comment le destinataire télécharge-t-il un fichier ?",
       "a4": "Il saisit le code court que vous partagez (ou ouvre le lien) et télécharge depuis une page web claire. Aucune installation ni création de compte.",
       "q5": "Puis-je contrôler la durée de disponibilité des fichiers ?",
-      "a5": "Oui. Vous pouvez définir une expiration, exiger un mot de passe et limiter le nombre de téléchargements pour chaque transfert."
+      "a5": "Oui. Vous pouvez définir une expiration, exiger un mot de passe et limiter le nombre de téléchargements pour chaque transfert.",
+      "q6": "Puis-je créer des groupes sur flick.d3l.tech ?",
+      "a6": "Non. Sur l'instance publique flick.d3l.tech, créer un compte vous donne accès à l'historique et à vos partages personnels, mais pas à la création de groupes. Les groupes et les contrôles d'administration avancés ne sont disponibles que si vous auto-hébergez Flick sur votre propre serveur."
     }
   },
   "Settings": {
