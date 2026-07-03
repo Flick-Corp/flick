@@ -59,7 +59,7 @@ func ServerUserConfigHandler() http.HandlerFunc {
 			return
 		}
 
-		out, err := json.MarshalIndent(serverconfig.UserFields(conf), "", "  ")
+		out, err := json.MarshalIndent(serverconfig.FilterUserFields(conf), "", "  ")
 		if err != nil {
 			WriteError(w, http.StatusInternalServerError, "Failed to encode config")
 			return

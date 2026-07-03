@@ -34,7 +34,7 @@ type uploadInput struct {
 	MaxDownloadCount string
 	GroupID          string
 	FolderID         string
-	ResolvedUploader string
+	ResolvedUploader pgtype.UUID
 	IsGroup          bool
 	Size             int64
 }
@@ -60,7 +60,7 @@ func buildMetadata(in uploadInput) (*metadata.Metadata, bool) {
 			return nil, false
 		}
 	} else {
-		if !m.SetUploaderID(in.ResolvedUploader) {
+		if !m.SetUploaderID(in.ResolvedUploader.String()) {
 			return nil, false
 		}
 		if !m.SetMaxDownloadCount(in.MaxDownloadCount) {
@@ -159,7 +159,7 @@ func finalizeUpload(ctx context.Context, queries *database.Queries, in uploadInp
 // Returns:
 // - result1 (error): An error if the binding could not be recorded.
 func bindGroupUpload(ctx context.Context, queries *database.Queries, in uploadInput, shareCode string) error {
-	var groupID, folderID, uploaderID pgtype.UUID
+	var groupID, folderID pgtype.UUID
 	if err := groupID.Scan(in.GroupID); err != nil {
 		return fmt.Errorf("invalid group id %q: %w", in.GroupID, err)
 	}
@@ -168,15 +168,12 @@ func bindGroupUpload(ctx context.Context, queries *database.Queries, in uploadIn
 			return fmt.Errorf("invalid folder id %q: %w", in.FolderID, err)
 		}
 	}
-	if err := uploaderID.Scan(in.ResolvedUploader); err != nil {
-		return fmt.Errorf("invalid uploader id %q: %w", in.ResolvedUploader, err)
-	}
 
 	if _, err := queries.CreateGroupUpload(ctx, database.CreateGroupUploadParams{
 		GroupID:    groupID,
 		FolderID:   folderID,
 		Code:       shareCode,
-		UploaderID: uploaderID,
+		UploaderID: in.ResolvedUploader,
 	}); err != nil {
 		return fmt.Errorf("cannot record group upload for code %q: %w", shareCode, err)
 	}

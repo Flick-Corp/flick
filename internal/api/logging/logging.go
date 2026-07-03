@@ -9,8 +9,9 @@ package logging
 
 import (
 	"fmt"
-	"github.com/Flick-Corp/flick/internal/utils/colors"
 	"time"
+
+	"github.com/Flick-Corp/flick/internal/utils/colors"
 )
 
 // printLogLabel: Print a label in this format <date> [<title>] > .
@@ -21,11 +22,11 @@ import (
 func printLogLabel(title string, titleColor string) {
 	now := time.Now().Format("15:04:05")
 
-	fmt.Printf(utils.Dim+"%s"+utils.Reset+" ", now)
-	fmt.Printf(utils.Gray + "[" + utils.Reset)
-	fmt.Printf(titleColor+utils.Bold+"%s"+utils.Reset, title)
-	fmt.Printf(utils.Gray + "]" + utils.Reset)
-	fmt.Printf(utils.Gray + " > " + utils.Reset)
+	fmt.Printf(colors.Dim+"%s"+colors.Reset+" ", now)
+	fmt.Printf(colors.Gray + "[" + colors.Reset)
+	fmt.Printf(titleColor+colors.Bold+"%s"+colors.Reset, title)
+	fmt.Printf(colors.Gray + "]" + colors.Reset)
+	fmt.Printf(colors.Gray + " > " + colors.Reset)
 }
 
 // LogInfoSuccess: Print a success log message.
@@ -36,7 +37,7 @@ func printLogLabel(title string, titleColor string) {
 func LogInfoSuccess(format string, args ...any) {
 	msg := fmt.Sprintf(format, args...)
 
-	printLogLabel("SUCCESS", utils.BrightGreen)
+	printLogLabel("SUCCESS", colors.BrightGreen)
 	fmt.Printf("%s\n", msg)
 }
 
@@ -51,7 +52,7 @@ func LogInfoSuccess(format string, args ...any) {
 func LogInfoError(format string, args ...any) error {
 	msg := fmt.Sprintf(format, args...)
 
-	printLogLabel("ERROR", utils.BrightRed)
+	printLogLabel("ERROR", colors.BrightRed)
 	fmt.Printf("%s\n", msg)
 	return fmt.Errorf("%s", msg)
 }
@@ -64,6 +65,6 @@ func LogInfoError(format string, args ...any) error {
 func LogInfo(format string, args ...any) {
 	msg := fmt.Sprintf(format, args...)
 
-	printLogLabel("INFO", utils.BrightBlue)
+	printLogLabel("INFO", colors.BrightBlue)
 	fmt.Printf("%s\n", msg)
 }

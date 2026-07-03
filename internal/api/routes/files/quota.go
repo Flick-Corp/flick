@@ -17,6 +17,7 @@ import (
 	"github.com/Flick-Corp/flick/internal/api/quota"
 	"github.com/Flick-Corp/flick/internal/api/routes"
 	"github.com/Flick-Corp/flick/internal/api/serverconfig"
+	"github.com/Flick-Corp/flick/internal/api/uploader"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -62,13 +63,13 @@ func QuotaHandler(queries *database.Queries) http.HandlerFunc {
 			usedBytes = u
 			limitMb = serverconfig.Conf.GroupQuotaMb
 		} else {
-			rawID, isAnonymous, _, err := resolveUploaderID(r, queries)
+			up, err := uploader.ResolveUploaderByID(r.Context(), queries, r.Header.Get("X-Flick-User-ID"))
 			if err != nil {
 				routes.WriteError(w, http.StatusBadRequest, "Invalid or unknown user")
 				return
 			}
 
-			u, err := quota.CalculateQuotaByUploaderID(rawID)
+			u, err := quota.CalculateQuotaByUploaderID(up.ID)
 			if err != nil {
 				routes.WriteError(w, http.StatusInternalServerError, "Cannot read quota")
 				return
@@ -76,7 +77,7 @@ func QuotaHandler(queries *database.Queries) http.HandlerFunc {
 
 			usedBytes = u
 			limitMb = serverconfig.Conf.UserQuotaMb
-			if isAnonymous {
+			if up.IsAnonymous {
 				limitMb = serverconfig.Conf.AnonymousQuotaMb
 			}
 		}
