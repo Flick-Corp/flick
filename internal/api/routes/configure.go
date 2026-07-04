@@ -14,45 +14,44 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Flick-Corp/flick/internal/api/auth"
+	"github.com/Flick-Corp/flick/internal/api/database"
 	"github.com/Flick-Corp/flick/internal/api/logging"
 	"github.com/Flick-Corp/flick/internal/api/path"
 	"github.com/Flick-Corp/flick/internal/api/serverconfig"
-	"github.com/Flick-Corp/flick/internal/api/utils"
 )
 
-// SendServerConfig: Sends the server config to the web if GET,
-// if POST modifies the server config.
+// ServerConfigHandler: Sends the server config to the web if GET, if POST modifies the server config.
+//
+// Params:
+// - queries (*database.Queries): The queries.
 //
 // Returns:
-// - http.HandlerFunc
-func SendServerConfig() http.HandlerFunc {
+// - result1 (http.HandlerFunc): The HTTP handler function.
+func ServerConfigHandler(queries *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		dir := path.GetFlickDir()
+		if _, status, err := auth.RequireAdmin(r.Context(), queries, auth.GetTokenFromHTTPRequest(r)); err != nil {
+			WriteError(w, status, err.Error())
+			return
+		}
 
 		// GET method
 		if r.Method == http.MethodGet {
-			data, err := os.ReadFile(filepath.Join(dir, "server-config.json"))
+			data, err := os.ReadFile(filepath.Join(path.GetFlickDir(), "server-config.json"))
 			if err != nil {
 				WriteError(w, http.StatusInternalServerError, "Failed to read config")
 				return
 			}
 
-			var conf serverconfig.Configuration
-			if err := json.Unmarshal(data, &conf); err != nil {
-				WriteError(w, http.StatusInternalServerError, "Failed to parse config")
-				return
-			}
-
-			out, _ := json.MarshalIndent(conf, "", "  ")
 			w.Header().Set("Content-Type", "application/json")
-			w.Write(out)
-
+			w.Write(data)
 			return
 		}
 
 		// POST method
 		if r.Method == http.MethodPost {
 			var newConf serverconfig.Configuration
+
 			decoder := json.NewDecoder(r.Body)
 			decoder.DisallowUnknownFields()
 			if err := decoder.Decode(&newConf); err != nil {
@@ -65,16 +64,9 @@ func SendServerConfig() http.HandlerFunc {
 				return
 			}
 
-			defaultDur, _ := utils.ParseExpirationTime(newConf.DefaultExpiration)
-			maxDur, _ := utils.ParseExpirationTime(newConf.MaxExpiration)
-			if defaultDur.After(maxDur) {
-				WriteError(w, http.StatusBadRequest, "default_expiration must be <= max_expiration")
-				return
-			}
-
 			serverconfig.Conf = newConf
 			data, _ := json.MarshalIndent(serverconfig.Conf, "", "  ")
-			if err := os.WriteFile(filepath.Join(dir, "server-config.json"), data, 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(path.GetFlickDir(), "server-config.json"), data, 0644); err != nil {
 				logging.LogInfoError("Cannot save server configuration: %v", err)
 				WriteError(w, http.StatusInternalServerError, "Failed to save config")
 				return

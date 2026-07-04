@@ -9,6 +9,7 @@ package serverconfig
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -60,7 +61,7 @@ var DefaultConfig Configuration = Configuration{
 	GroupQuotaMb:            10000,
 }
 
-// Server configuration currently in use
+// Conf holds the active runtime server configuration, initialized from the defaults.
 var Conf Configuration = DefaultConfig
 
 // Validate for the struct tag.
@@ -81,8 +82,15 @@ func WriteDefaultConfig() {
 		logging.LogInfo("Server configuration file already exists")
 		return
 	}
-	data, _ := json.MarshalIndent(DefaultConfig, "", " ")
-	os.WriteFile(filepath.Join(dir, "server-config.json"), data, 0644)
+	data, err := json.MarshalIndent(DefaultConfig, "", "  ")
+	if err != nil {
+		logging.LogInfoError("Cannot marshal default server configuration: %v", err)
+		return
+	}
+
+	if err := os.WriteFile(filepath.Join(dir, "server-config.json"), data, 0644); err != nil {
+		logging.LogInfoError("Cannot write default server configuration: %v", err)
+	}
 }
 
 // LoadServerConfigFromDisk: Loads the server configuration file into Conf.
@@ -136,5 +144,14 @@ func FilterUserFields(c Configuration) map[string]any {
 // Returns:
 // - error: The validation error, if any.
 func (c *Configuration) Validate() error {
-	return validate.Struct(c)
+	if err := validate.Struct(c); err != nil {
+		return err
+	}
+
+	defaultDur, _ := utils.ParseExpirationTime(c.DefaultExpiration)
+	maxDur, _ := utils.ParseExpirationTime(c.MaxExpiration)
+	if defaultDur.After(maxDur) {
+		return errors.New("default_expiration must be <= max_expiration")
+	}
+	return nil
 }
