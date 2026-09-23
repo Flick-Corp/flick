@@ -176,7 +176,748 @@
     "protectionBody": "Ajoutez un mot de passe pour sécuriser l'accès à vos fichiers."
   },
   "Footer": {
-    "rights": "Open source · Auto-hébergé · © 2026"
+    "rights": "Open source · Auto-hébergé · © 2026",
+    "legalLabel": "Liens légaux",
+    "legal": "Mentions légales",
+    "terms": "CGU",
+    "privacy": "Confidentialité"
+  },
+  "Legal": {
+    "eyebrow": "Informations légales",
+    "title": "Mentions légales",
+    "summary": "Qui édite %siteHost%, qui l'héberge, et comment signaler un contenu illicite.",
+    "intro": "Ces mentions concernent l'instance publique %siteHost%. Les instances de %site% que vous installez sur vos propres serveurs ne sont pas couvertes : leur exploitant en est seul responsable.",
+    "updated": "Dernière mise à jour : {date}",
+    "tocLabel": "Sommaire",
+    "sections": [
+      {
+        "id": "editeur",
+        "heading": "1. Éditeur du site",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Le site %siteUrl% est édité par %publisher%, personnes physiques agissant à titre non professionnel et sans but lucratif, dans le cadre d'un projet en logiciel libre."
+          },
+          {
+            "type": "p",
+            "text": "Ces informations sont publiées en application de l'article 1-1 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique, dans sa rédaction issue de la loi n° 2024-449 du 21 mai 2024."
+          },
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "Éditeurs",
+                "desc": "%publisher%"
+              },
+              {
+                "term": "Adresse",
+                "desc": "%publisherAddress%"
+              },
+              {
+                "term": "Téléphone",
+                "desc": "%publisherPhone%"
+              },
+              {
+                "term": "Contact",
+                "desc": "%contactEmail%"
+              },
+              {
+                "term": "Directeur de la publication",
+                "desc": "%director%"
+              }
+            ]
+          },
+          {
+            "type": "p",
+            "text": "Le service est fourni gratuitement. Aucun paiement, aucun abonnement et aucune régie publicitaire ne sont associés à %siteHost%."
+          }
+        ]
+      },
+      {
+        "id": "hebergement",
+        "heading": "2. Hébergement",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "L'instance publique fonctionne sur un serveur administré directement par les éditeurs. Les fichiers qui y transitent ne sont confiés à aucun service de stockage tiers ni à aucun cloud public."
+          },
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "Hébergement",
+                "desc": "Serveur administré par les éditeurs du site, %publisher%."
+              },
+              {
+                "term": "Connectivité et adressage IP",
+                "desc": "%host%, association à but non lucratif de droit local d'Alsace-Moselle."
+              },
+              {
+                "term": "Contact de l'hébergeur",
+                "desc": "%hostEmail%"
+              },
+              {
+                "term": "Adresse",
+                "desc": "%hostAddress%"
+              },
+              {
+                "term": "Téléphone",
+                "desc": "%hostPhone%"
+              }
+            ]
+          },
+          {
+            "type": "p",
+            "text": "Les données sont stockées et traitées au sein de l'Union européenne."
+          }
+        ]
+      },
+      {
+        "id": "service",
+        "heading": "3. Nature du service",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "%site% est un outil de transfert de fichiers temporaire. Un fichier déposé reçoit un code court, par exemple ocean-tiger-42, que l'émetteur communique au destinataire. Le fichier est supprimé automatiquement à l'expiration du délai choisi ou une fois le nombre de téléchargements autorisés atteint."
+          },
+          {
+            "type": "p",
+            "text": "Le service n'est ni un espace de stockage, ni une solution de sauvegarde, ni un outil d'archivage. Ses conditions d'usage détaillées figurent dans les conditions générales d'utilisation."
+          }
+        ]
+      },
+      {
+        "id": "propriete",
+        "heading": "4. Propriété intellectuelle",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Le logiciel %site% est un logiciel libre distribué sous licence MIT. Son code source est publié sur %repo% et peut être lu, modifié et réutilisé dans les conditions de cette licence."
+          },
+          {
+            "type": "p",
+            "text": "Le nom %site%, le logo et l'identité visuelle du site restent la propriété de leurs auteurs : la licence MIT porte sur le code, pas sur la marque et les éléments graphiques."
+          },
+          {
+            "type": "p",
+            "text": "Les fichiers transmis par les utilisateurs restent la propriété de leurs titulaires. Les éditeurs ne revendiquent aucun droit sur leur contenu."
+          }
+        ]
+      },
+      {
+        "id": "signalement",
+        "heading": "5. Signaler un contenu illicite",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Pour les fichiers déposés par les utilisateurs, les éditeurs agissent comme fournisseur de services d'hébergement, au sens de l'article 6 du règlement (UE) 2022/2065 sur les services numériques et de l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique. Ils n'exercent aucune surveillance généralisée sur ces fichiers et retirent promptement tout contenu manifestement illicite qui leur est notifié."
+          },
+          {
+            "type": "p",
+            "text": "Tout signalement se fait à l'adresse %contactEmail%, qui sert également de point de contact. Conformément à l'article 16 du règlement sur les services numériques, merci d'y faire figurer :"
+          },
+          {
+            "type": "ul",
+            "items": [
+              "une explication suffisamment motivée des raisons pour lesquelles le contenu vous paraît illicite ;",
+              "le code du transfert ou l'adresse exacte de la page, afin que le contenu puisse être localisé précisément ;",
+              "vos nom et adresse électronique, sauf lorsque le signalement porte sur une infraction visée aux articles 3 à 7 de la directive 2011/93/UE ;",
+              "une déclaration confirmant que vous estimez de bonne foi que les informations du signalement sont exactes et complètes."
+            ]
+          },
+          {
+            "type": "p",
+            "text": "Nous accusons réception sans retard, traitons le signalement dans un délai de %abuseAck% heures et vous informons de la décision prise ainsi que des voies de recours ouvertes. Aucune décision de retrait n'est prise par un moyen automatisé. Compte tenu des durées d'expiration appliquées, un transfert signalé a le plus souvent déjà disparu au moment du traitement."
+          },
+          {
+            "type": "note",
+            "text": "Présenter un contenu comme illicite en sachant que cette information est inexacte, dans le but d'en obtenir le retrait, est puni d'un an d'emprisonnement et de 15 000 euros d'amende par l'article 6 de la LCEN."
+          }
+        ]
+      },
+      {
+        "id": "vulnerabilites",
+        "heading": "6. Signaler une faille de sécurité",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Les failles de sécurité se signalent en privé, jamais par une issue ou une demande de fusion publique. La procédure, les délais de réponse et les adresses des mainteneurs figurent dans le fichier SECURITY.md du dépôt %repo%."
+          }
+        ]
+      },
+      {
+        "id": "liens",
+        "heading": "7. Liens hypertextes",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Le site renvoie vers des ressources externes, notamment le dépôt de code hébergé par GitHub. Les éditeurs n'exercent aucun contrôle sur ces sites et déclinent toute responsabilité quant à leur contenu."
+          }
+        ]
+      },
+      {
+        "id": "donnees",
+        "heading": "8. Données personnelles et cookies",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Les traitements de données personnelles sont décrits dans la politique de confidentialité. %site% n'utilise aucun traceur publicitaire ni aucun outil de mesure d'audience tiers."
+          }
+        ]
+      },
+      {
+        "id": "droit",
+        "heading": "9. Droit applicable",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Les présentes mentions légales sont soumises au droit français. En cas de litige, une solution amiable sera recherchée en priorité à l'adresse %contactEmail%. À défaut d'accord, les tribunaux français sont compétents."
+          },
+          {
+            "type": "p",
+            "text": "La version française de ce document fait foi. La traduction anglaise est fournie à titre informatif."
+          }
+        ]
+      }
+    ]
+  },
+  "Terms": {
+    "eyebrow": "Conditions d'utilisation",
+    "title": "Conditions générales d'utilisation",
+    "summary": "Ce que fait le service, ce qu'il ne fait pas, et ce que vous vous engagez à ne pas y déposer.",
+    "intro": "Ces conditions encadrent l'accès et l'utilisation de l'instance publique %siteHost%. Envoyer un fichier, en télécharger un avec un code ou créer un compte vaut acceptation.",
+    "updated": "Dernière mise à jour : {date}",
+    "tocLabel": "Sommaire",
+    "sections": [
+      {
+        "id": "objet",
+        "heading": "1. Objet et acceptation",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Les présentes conditions générales d'utilisation régissent l'accès et l'utilisation du service de transfert de fichiers %site% tel qu'il est exploité par %publisher% à l'adresse %siteUrl%."
+          },
+          {
+            "type": "p",
+            "text": "Utiliser le service, en envoyant un fichier, en téléchargeant un fichier au moyen d'un code ou en créant un compte, vaut acceptation sans réserve des présentes conditions. Si vous les refusez, n'utilisez pas le service."
+          },
+          {
+            "type": "p",
+            "text": "Le service est accessible gratuitement, sans engagement de durée et sans contrepartie financière."
+          }
+        ]
+      },
+      {
+        "id": "definitions",
+        "heading": "2. Définitions",
+        "blocks": [
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "Service",
+                "desc": "L'instance publique de %site% accessible à l'adresse %siteUrl%, son interface web et son client en ligne de commande."
+              },
+              {
+                "term": "Transfert",
+                "desc": "Un fichier ou un ensemble de fichiers déposés sur le Service, avec leurs métadonnées et leur date d'expiration."
+              },
+              {
+                "term": "Code",
+                "desc": "La suite de mots courts générée pour chaque Transfert, par exemple ocean-tiger-42, qui permet de le télécharger."
+              },
+              {
+                "term": "Émetteur",
+                "desc": "La personne qui dépose un Transfert, avec ou sans compte."
+              },
+              {
+                "term": "Destinataire",
+                "desc": "La personne qui télécharge un Transfert au moyen du Code."
+              },
+              {
+                "term": "Instance auto-hébergée",
+                "desc": "Toute installation de %site% exploitée par un tiers sur sa propre infrastructure, à laquelle les présentes conditions ne s'appliquent pas."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "fonctionnement",
+        "heading": "3. Fonctionnement et limites",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "L'Émetteur dépose un fichier, le Service renvoie un Code, l'Émetteur transmet ce Code au Destinataire par le canal de son choix. Le Destinataire saisit le Code sur le site ou dans le client en ligne de commande pour récupérer le fichier."
+          },
+          {
+            "type": "p",
+            "text": "L'instance publique applique les limites suivantes :"
+          },
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "Taille maximale",
+                "desc": "%maxFileSize% Mo par Transfert."
+              },
+              {
+                "term": "Expiration",
+                "desc": "%defaultExpiration% minutes par défaut, %maxExpiration% heures au maximum."
+              },
+              {
+                "term": "Téléchargements",
+                "desc": "%defaultDownloads% par défaut, %maxDownloads% au maximum par Transfert."
+              },
+              {
+                "term": "Volume stocké",
+                "desc": "%anonymousQuota% Go sans compte, %userQuota% Go avec un compte, %groupQuota% Go par groupe sur les instances qui en disposent."
+              },
+              {
+                "term": "Cadence",
+                "desc": "Le Service peut limiter le nombre d'envois par heure, par expéditeur et par adresse IP, afin de préserver sa disponibilité."
+              },
+              {
+                "term": "Protection",
+                "desc": "Un mot de passe peut être exigé au téléchargement. Il n'est jamais enregistré en clair."
+              }
+            ]
+          },
+          {
+            "type": "p",
+            "text": "Ces valeurs correspondent à la configuration actuelle de l'instance publique. Elles peuvent être ajustées à tout moment pour des raisons techniques ou de sécurité, et diffèrent sur les instances auto-hébergées."
+          },
+          {
+            "type": "note",
+            "text": "La création de groupes n'est pas ouverte sur l'instance publique. Un compte y donne accès à l'historique et à vos partages personnels. Les groupes et l'administration avancée supposent d'installer %site% sur votre propre serveur."
+          }
+        ]
+      },
+      {
+        "id": "expiration",
+        "heading": "4. Expiration et suppression des Transferts",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Chaque Transfert est supprimé automatiquement dès que sa date d'expiration est atteinte ou que le nombre de téléchargements autorisés est épuisé, selon l'événement qui survient en premier."
+          },
+          {
+            "type": "p",
+            "text": "Cette suppression est définitive et irréversible. Aucune copie de sauvegarde n'est conservée et les éditeurs ne peuvent restaurer un Transfert expiré, quelle qu'en soit la raison."
+          },
+          {
+            "type": "note",
+            "text": "%site% n'est ni un service de stockage, ni une solution de sauvegarde, ni un outil d'archivage. Conservez toujours l'original de ce que vous envoyez."
+          }
+        ]
+      },
+      {
+        "id": "code",
+        "heading": "5. Le Code vaut clé d'accès",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Un Transfert est accessible à quiconque détient son Code, dans la limite de sa date d'expiration et du nombre de téléchargements restants. Le Service ne vérifie pas l'identité du Destinataire."
+          },
+          {
+            "type": "p",
+            "text": "Il vous appartient donc de transmettre le Code par un canal que vous jugez sûr, de choisir la durée d'expiration la plus courte possible et, pour un contenu sensible, d'exiger un mot de passe."
+          },
+          {
+            "type": "note",
+            "text": "Les envois effectués depuis le navigateur ne sont pas chiffrés de bout en bout : le serveur traite le fichier en clair pour le stocker. Le client en ligne de commande propose un chiffrement de bout en bout avec l'option --encrypt, auquel cas le serveur ne détient jamais la clé."
+          }
+        ]
+      },
+      {
+        "id": "compte",
+        "heading": "6. Comptes",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "La création d'un compte est facultative. Elle requiert un identifiant, une adresse électronique valide et un mot de passe, et donne accès à l'historique de vos partages. Envoyer et recevoir des fichiers reste possible sans compte."
+          },
+          {
+            "type": "p",
+            "text": "En créant un compte, vous vous engagez à ce qui suit :"
+          },
+          {
+            "type": "ul",
+            "items": [
+              "fournir des informations exactes et maintenir votre adresse électronique à jour ;",
+              "conserver votre mot de passe confidentiel et répondre des actions effectuées depuis votre compte ;",
+              "signaler sans délai tout usage non autorisé à %contactEmail% ;",
+              "ne pas utiliser le compte d'une autre personne et ne pas partager vos identifiants."
+            ]
+          },
+          {
+            "type": "p",
+            "text": "Une session ouverte reste valide %sessionDays% jours, puis expire. Vous pouvez vous déconnecter à tout moment depuis votre profil et demander la suppression de votre compte à l'adresse %contactEmail%."
+          }
+        ]
+      },
+      {
+        "id": "usages",
+        "heading": "7. Usages interdits",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Vous êtes seul responsable des fichiers que vous déposez et du droit dont vous disposez pour les diffuser. Il est interdit d'utiliser le Service pour transmettre ou diffuser :"
+          },
+          {
+            "type": "ul",
+            "items": [
+              "des contenus portant atteinte au droit d'auteur, aux droits voisins, aux marques ou à tout autre droit de propriété intellectuelle de tiers ;",
+              "des contenus à caractère pédopornographique, provoquant au terrorisme ou en faisant l'apologie, ou incitant à la haine, à la violence ou à la discrimination ;",
+              "des contenus portant atteinte à la vie privée, au droit à l'image, au secret des correspondances ou à l'honneur d'autrui ;",
+              "des données personnelles de tiers en l'absence de base légale vous autorisant à les communiquer ;",
+              "des logiciels malveillants, des rançongiciels, des données volées ou des identifiants dérobés ;",
+              "des contenus destinés à une campagne d'hameçonnage, à du démarchage massif ou à toute autre opération frauduleuse."
+            ]
+          },
+          {
+            "type": "p",
+            "text": "Il est également interdit de perturber le Service, notamment en contournant les quotas, les durées d'expiration ou la limitation du nombre de requêtes, en automatisant les dépôts au-delà d'un usage normal, en tentant d'énumérer les Codes d'autrui, ou en cherchant à accéder à des données ou à des composants du serveur auxquels vous n'avez pas droit."
+          }
+        ]
+      },
+      {
+        "id": "moderation",
+        "heading": "8. Modération, suspension et résiliation",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Les éditeurs peuvent, sans préavis, supprimer un Transfert manifestement illicite qui leur est signalé, bloquer un compte qui enfreint les présentes conditions, restreindre l'accès d'une adresse IP à l'origine d'un usage abusif, et suspendre ou arrêter l'instance publique."
+          },
+          {
+            "type": "p",
+            "text": "Un compte bloqué conserve l'accès à son profil, afin que son titulaire puisse contester la mesure à l'adresse %contactEmail%."
+          },
+          {
+            "type": "p",
+            "text": "Vous pouvez cesser d'utiliser le Service à tout moment, sans justification et sans frais."
+          }
+        ]
+      },
+      {
+        "id": "disponibilite",
+        "heading": "9. Disponibilité et absence de garantie",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Le Service est fourni en l'état et selon sa disponibilité, à titre gratuit. Aucun niveau de service, aucune disponibilité minimale et aucun délai de rétablissement ne sont garantis."
+          },
+          {
+            "type": "p",
+            "text": "L'accès peut être interrompu à tout moment pour maintenance, mise à jour, incident technique ou décision d'arrêter l'instance publique. Dans la limite permise par la loi, les éditeurs ne garantissent ni l'absence d'interruption, ni l'absence d'erreur, ni la conservation des Transferts."
+          }
+        ]
+      },
+      {
+        "id": "responsabilite",
+        "heading": "10. Responsabilité",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Pour les fichiers déposés par les utilisateurs, les éditeurs agissent comme hébergeur au sens de l'article 6 de la LCEN. Ils ne procèdent à aucune surveillance générale des contenus et n'engagent leur responsabilité qu'à compter du moment où, dûment informés d'un contenu manifestement illicite, ils n'agissent pas promptement pour le retirer."
+          },
+          {
+            "type": "p",
+            "text": "L'Émetteur garantit les éditeurs contre toute réclamation d'un tiers fondée sur un fichier qu'il a déposé."
+          },
+          {
+            "type": "p",
+            "text": "Dans la limite permise par la loi, la responsabilité des éditeurs ne saurait être engagée au titre de la perte d'un fichier expiré ou supprimé, de la divulgation d'un Code par l'Émetteur ou le Destinataire, d'un dommage indirect tel qu'une perte d'exploitation ou de données, ou d'un événement de force majeure."
+          },
+          {
+            "type": "p",
+            "text": "Aucune stipulation des présentes conditions n'a pour effet d'écarter la responsabilité des éditeurs en cas de faute lourde ou dolosive, ni les droits que la loi reconnaît impérativement aux utilisateurs."
+          }
+        ]
+      },
+      {
+        "id": "propriete",
+        "heading": "11. Propriété intellectuelle",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Le logiciel est distribué sous licence MIT et son code source est disponible sur %repo%. Cette licence ne vous confère aucun droit sur le nom, le logo et l'identité visuelle de %site%."
+          },
+          {
+            "type": "p",
+            "text": "Vous conservez l'intégralité de vos droits sur les fichiers que vous déposez. Vous accordez seulement aux éditeurs le droit technique de les stocker et de les transmettre au Destinataire, pour la seule durée du Transfert et pour les seuls besoins du Service."
+          }
+        ]
+      },
+      {
+        "id": "donnees",
+        "heading": "12. Données personnelles",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Les traitements de données personnelles, leurs bases légales, leurs durées de conservation et les moyens d'exercer vos droits sont décrits dans la politique de confidentialité."
+          }
+        ]
+      },
+      {
+        "id": "autohebergement",
+        "heading": "13. Instances auto-hébergées",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "%site% peut être installé librement sur votre propre infrastructure. Dans ce cas, les présentes conditions ne s'appliquent pas : l'exploitant de l'instance en définit les règles d'usage, en assure la sécurité et devient responsable des données traitées."
+          },
+          {
+            "type": "p",
+            "text": "Le logiciel est alors fourni sans aucune garantie, dans les termes de la licence MIT."
+          }
+        ]
+      },
+      {
+        "id": "evolution",
+        "heading": "14. Modification des conditions",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Les présentes conditions peuvent être modifiées, notamment pour suivre l'évolution du Service ou de la réglementation. La version en vigueur est celle publiée sur cette page, avec sa date de mise à jour. Continuer à utiliser le Service après une modification vaut acceptation de la nouvelle version."
+          }
+        ]
+      },
+      {
+        "id": "droit",
+        "heading": "15. Droit applicable et litiges",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Les présentes conditions sont soumises au droit français. En cas de difficulté, contactez d'abord %contactEmail% : une solution amiable sera recherchée. À défaut d'accord, le litige relève des juridictions françaises compétentes."
+          },
+          {
+            "type": "p",
+            "text": "La version française de ce document fait foi. La traduction anglaise est fournie à titre informatif."
+          }
+        ]
+      }
+    ]
+  },
+  "Privacy": {
+    "eyebrow": "Vie privée",
+    "title": "Politique de confidentialité",
+    "summary": "Quelles données sont traitées, pourquoi, pendant combien de temps, et comment exercer vos droits.",
+    "intro": "Cette politique décrit les traitements de données personnelles réalisés sur l'instance publique %siteHost%. Elle suit un principe simple : ne collecter que ce dont le service a strictement besoin pour fonctionner.",
+    "updated": "Dernière mise à jour : {date}",
+    "tocLabel": "Sommaire",
+    "sections": [
+      {
+        "id": "responsable",
+        "heading": "1. Responsable de traitement",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Le responsable de traitement est %publisher%, éditeur de %siteUrl%. Pour toute question relative à vos données, écrivez à %contactEmail%."
+          },
+          {
+            "type": "p",
+            "text": "Aucun délégué à la protection des données n'a été désigné : la nature et le volume des traitements réalisés ne l'imposent pas."
+          }
+        ]
+      },
+      {
+        "id": "principes",
+        "heading": "2. Ce que nous ne faisons pas",
+        "blocks": [
+          {
+            "type": "ul",
+            "items": [
+              "aucun traceur publicitaire et aucune publicité ;",
+              "aucun outil de mesure d'audience tiers ;",
+              "aucune vente, location ou mise à disposition de vos données à des fins commerciales ;",
+              "aucun profilage et aucune décision automatisée produisant des effets juridiques à votre égard ;",
+              "aucun compte exigé pour envoyer ou recevoir un fichier."
+            ]
+          },
+          {
+            "type": "p",
+            "text": "Nous ne demandons ni votre nom réel, ni votre numéro de téléphone, ni votre adresse postale, ni de moyen de paiement, le service étant gratuit. Nous n'utilisons pas la géolocalisation et n'enrichissons vos données auprès d'aucune source externe."
+          }
+        ]
+      },
+      {
+        "id": "donnees",
+        "heading": "3. Données traitées, finalités et durées",
+        "blocks": [
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "Fichiers et métadonnées",
+                "desc": "Nom, taille, type, Code, empreinte d'intégrité, date d'expiration, nombre de téléchargements restants et message facultatif. Finalité : exécuter le transfert demandé. Base légale : exécution du contrat, article 6.1.b du RGPD. Conservation : jusqu'à l'expiration, soit %defaultExpiration% minutes par défaut et %maxExpiration% heures au maximum, ou jusqu'au dernier téléchargement autorisé."
+              },
+              {
+                "term": "Mot de passe d'un Transfert",
+                "desc": "Finalité : restreindre le téléchargement à qui connaît le mot de passe. Base légale : exécution du contrat. Conservation : uniquement sous forme d'empreinte Argon2id, effacée avec le Transfert. Le mot de passe en clair n'est jamais enregistré."
+              },
+              {
+                "term": "Compte",
+                "desc": "Identifiant, adresse électronique, empreinte Argon2id du mot de passe, rôle et date de création. Finalité : authentifier l'utilisateur et lui donner accès à l'historique de ses partages. Base légale : exécution du contrat. Conservation : jusqu'à la suppression du compte."
+              },
+              {
+                "term": "Session",
+                "desc": "Jeton de session et date d'expiration, conservés côté serveur, avec une copie dans le stockage local de votre navigateur. Finalité : vous maintenir connecté d'une visite à l'autre. Base légale : exécution du contrat. Conservation : %sessionDays% jours au maximum, ou jusqu'à la déconnexion."
+              },
+              {
+                "term": "Identifiant d'expéditeur",
+                "desc": "Identifiant aléatoire généré par votre navigateur ou votre client en ligne de commande lors d'un envoi sans compte. Finalité : rattacher un Transfert à son expéditeur pour appliquer les quotas. Base légale : intérêt légitime à protéger le Service contre les abus. Conservation : dans votre navigateur jusqu'à effacement du stockage local, et côté serveur le temps du Transfert."
+              },
+              {
+                "term": "Adresse IP",
+                "desc": "Finalité : acheminer les requêtes vers le serveur et, lorsque la limitation de débit est activée, plafonner les envois abusifs. Base légale : intérêt légitime à assurer la sécurité et la disponibilité du Service. Conservation : l'adresse IP est traitée de façon transitoire, le temps de la requête. Aucun journal d'accès n'est configuré sur le serveur et l'adresse IP n'est enregistrée ni en base de données, ni dans les métadonnées d'un Transfert."
+              },
+              {
+                "term": "Messages que vous nous adressez",
+                "desc": "Adresse électronique et contenu de vos signalements ou demandes. Finalité : traiter votre demande et en garder la trace. Base légale : intérêt légitime à répondre et à documenter les signalements. Conservation : %mailMonths% mois."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cookies",
+        "heading": "4. Cookies et stockage local",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "%site% n'utilise aucun cookie publicitaire ni aucun outil de mesure d'audience tiers. Les éléments déposés sur votre appareil sont strictement nécessaires au fonctionnement du site, ce qui les dispense de recueil du consentement."
+          },
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "Cookie sidebar_state",
+                "desc": "Mémorise si la barre latérale du tableau de bord est ouverte ou repliée. Durée : 7 jours."
+              },
+              {
+                "term": "Stockage local, session",
+                "desc": "Conserve le jeton de votre session pour éviter de vous reconnecter à chaque visite. Effacé à la déconnexion."
+              },
+              {
+                "term": "Stockage local, identifiant d'expéditeur",
+                "desc": "Identifiant aléatoire permettant d'appliquer les quotas aux envois réalisés sans compte."
+              },
+              {
+                "term": "Stockage local, thème",
+                "desc": "Mémorise votre préférence d'affichage clair ou sombre."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "securite",
+        "heading": "5. Sécurité",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Les échanges avec le Service sont chiffrés en transit par TLS. Les mots de passe des comptes et des Transferts sont enregistrés sous forme d'empreintes Argon2id. Les Transferts expirent et sont supprimés automatiquement, ce qui réduit mécaniquement la fenêtre d'exposition. Le code source est public et peut être audité sur %repo%."
+          },
+          {
+            "type": "note",
+            "text": "Par transparence : les envois effectués depuis le navigateur ne sont pas chiffrés de bout en bout, le serveur traite le fichier en clair pour le stocker. Si vous avez besoin que le serveur ne puisse jamais lire votre fichier, utilisez le client en ligne de commande avec l'option --encrypt."
+          }
+        ]
+      },
+      {
+        "id": "destinataires",
+        "heading": "6. Destinataires et localisation",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Vos données ne sont ni vendues, ni louées, ni transmises à des tiers à des fins commerciales."
+          },
+          {
+            "type": "p",
+            "text": "Le Service fonctionne sur un serveur administré directement par les éditeurs, sans service de stockage tiers ni cloud public. %host% fournit la connectivité réseau et l'adressage IP : ce prestataire achemine le trafic et n'accède pas aux contenus stockés."
+          },
+          {
+            "type": "p",
+            "text": "Les données sont hébergées au sein de l'Union européenne. Aucun transfert de données en dehors de l'Union européenne n'est réalisé."
+          },
+          {
+            "type": "p",
+            "text": "Elles peuvent être communiquées aux autorités judiciaires ou administratives lorsque la loi l'exige."
+          }
+        ]
+      },
+      {
+        "id": "droits",
+        "heading": "7. Vos droits",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Vous disposez, dans les conditions prévues par le RGPD, des droits d'accès, de rectification, d'effacement, de limitation du traitement, d'opposition et de portabilité, ainsi que du droit de définir des directives relatives au sort de vos données après votre décès."
+          },
+          {
+            "type": "p",
+            "text": "Pour les exercer, écrivez à %contactEmail%, si possible depuis l'adresse associée à votre compte. Nous répondons dans un délai d'un mois, prolongeable de deux mois en cas de demande complexe. Une preuve d'identité peut être demandée en cas de doute raisonnable sur l'identité du demandeur."
+          },
+          {
+            "type": "note",
+            "text": "Les Transferts envoyés sans compte ne sont rattachés à aucune identité. Sans le Code correspondant, nous n'avons aucun moyen de retrouver un fichier que vous auriez envoyé, ce qui limite en pratique l'exercice des droits sur ces données. En revanche, un Transfert dont vous nous communiquez le Code est supprimé sans délai."
+          },
+          {
+            "type": "p",
+            "text": "Vous pouvez également introduire une réclamation auprès de la %authority%, %authorityAddress%, %authorityUrl%."
+          }
+        ]
+      },
+      {
+        "id": "suppression",
+        "heading": "8. Supprimer vos données",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Un Transfert peut être supprimé avant son expiration en nous communiquant son Code à %contactEmail%. À défaut, il disparaît de lui-même à l'expiration du délai choisi."
+          },
+          {
+            "type": "p",
+            "text": "La suppression d'un compte se demande à la même adresse : elle efface l'identifiant, l'adresse électronique, l'empreinte du mot de passe et les sessions associées."
+          }
+        ]
+      },
+      {
+        "id": "mineurs",
+        "heading": "9. Mineurs",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Le Service n'est pas destiné aux personnes de moins de quinze ans sans l'accord du titulaire de l'autorité parentale. Si vous constatez qu'un compte a été créé dans ces conditions, signalez-le à %contactEmail% afin qu'il soit supprimé."
+          }
+        ]
+      },
+      {
+        "id": "autohebergement",
+        "heading": "10. Instances auto-hébergées",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Cette politique ne couvre que l'instance publique %siteHost%. Lorsque %site% est installé sur l'infrastructure d'un tiers, l'exploitant de cette instance devient responsable de traitement et définit ses propres règles de conservation et de sécurité."
+          }
+        ]
+      },
+      {
+        "id": "evolution",
+        "heading": "11. Modification de la politique",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Cette politique peut être mise à jour pour refléter une évolution du Service ou de la réglementation. La date de dernière mise à jour figure en haut de cette page et, en cas de modification substantielle, l'information est portée sur le site."
+          },
+          {
+            "type": "p",
+            "text": "La version française de ce document fait foi. La traduction anglaise est fournie à titre informatif."
+          }
+        ]
+      }
+    ]
   },
   "Send": {
     "back": "Retour",

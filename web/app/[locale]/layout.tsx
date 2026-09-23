@@ -6,6 +6,7 @@ import { setRequestLocale } from "next-intl/server"
 
 import "../globals.css"
 import { PageTransition } from "@/components/page-transition"
+import SiteFooter from "@/components/site-footer"
 import SiteHeader from "@/components/site-header"
 import { ThemeProvider } from "@/components/theme-provider"
 import { routing } from "@/i18n/routing"
@@ -66,6 +67,7 @@ export default async function LocaleLayout({
           <ThemeProvider>
             <SiteHeader />
             <PageTransition>{children}</PageTransition>
+            <SiteFooter />
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

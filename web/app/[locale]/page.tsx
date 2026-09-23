@@ -2,7 +2,6 @@ import { ArrowUpRight, Check } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { AsciinemaPlayer } from "@/components/asciinema-player"
-import { GithubIcon } from "@/components/icons"
 import { MouseMist } from "@/components/mouse-mist"
 import { Button } from "@/components/ui/button"
 import { Link } from "@/i18n/navigation"
@@ -12,7 +11,6 @@ export default function Page() {
   const tFeatures = useTranslations("Features")
   const tHow = useTranslations("HowItWorks")
   const tCTA = useTranslations("CallToAction")
-  const tFooter = useTranslations("Footer")
   const tL = useTranslations("Landing")
 
   const comparPoints = [
@@ -168,19 +166,6 @@ export default function Page() {
           </Button>
         </div>
       </section>
-
-      <footer className="mt-20 flex flex-col items-center justify-between gap-4 border-t border-border pt-7 text-sm text-muted-foreground sm:flex-row">
-        <span>{tFooter("rights")}</span>
-        <a
-          href="https://github.com/Flick-Corp/flick"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
-        >
-          <GithubIcon className="size-4" />
-          GitHub
-        </a>
-      </footer>
     </main>
   )
 }

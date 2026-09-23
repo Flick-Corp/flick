@@ -176,7 +176,748 @@
     "protectionBody": "Add a password to secure access to your files."
   },
   "Footer": {
-    "rights": "Open source · Self-host · © 2026"
+    "rights": "Open source · Self-host · © 2026",
+    "legalLabel": "Legal links",
+    "legal": "Legal notice",
+    "terms": "Terms",
+    "privacy": "Privacy"
+  },
+  "Legal": {
+    "eyebrow": "Legal information",
+    "title": "Legal notice",
+    "summary": "Who publishes %siteHost%, who hosts it, and how to report unlawful content.",
+    "intro": "This notice covers the public instance at %siteHost%. Instances of %site% you install on your own servers are not covered: whoever operates them is solely responsible for them.",
+    "updated": "Last updated: {date}",
+    "tocLabel": "Contents",
+    "sections": [
+      {
+        "id": "editeur",
+        "heading": "1. Publisher",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "%siteUrl% is published by %publisher%, private individuals acting in a non-professional and non-profit capacity, as part of an open source project."
+          },
+          {
+            "type": "p",
+            "text": "This information is published under article 1-1 of French law no. 2004-575 of 21 June 2004 on confidence in the digital economy, as amended by law no. 2024-449 of 21 May 2024."
+          },
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "Publishers",
+                "desc": "%publisher%"
+              },
+              {
+                "term": "Address",
+                "desc": "%publisherAddress%"
+              },
+              {
+                "term": "Phone",
+                "desc": "%publisherPhone%"
+              },
+              {
+                "term": "Contact",
+                "desc": "%contactEmail%"
+              },
+              {
+                "term": "Publication director",
+                "desc": "%director%"
+              }
+            ]
+          },
+          {
+            "type": "p",
+            "text": "The service is provided free of charge. No payment, subscription or advertising network is attached to %siteHost%."
+          }
+        ]
+      },
+      {
+        "id": "hebergement",
+        "heading": "2. Hosting",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "The public instance runs on a server the publishers administer themselves. Files passing through it are never entrusted to a third-party storage service or a public cloud."
+          },
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "Hosting",
+                "desc": "Server administered by the publishers of the site, %publisher%."
+              },
+              {
+                "term": "Connectivity and IP addressing",
+                "desc": "%host%, a non-profit association under the local law of Alsace-Moselle."
+              },
+              {
+                "term": "Host contact",
+                "desc": "%hostEmail%"
+              },
+              {
+                "term": "Address",
+                "desc": "%hostAddress%"
+              },
+              {
+                "term": "Phone",
+                "desc": "%hostPhone%"
+              }
+            ]
+          },
+          {
+            "type": "p",
+            "text": "Data is stored and processed within the European Union."
+          }
+        ]
+      },
+      {
+        "id": "service",
+        "heading": "3. What the service is",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "%site% is a temporary file transfer tool. An uploaded file gets a short code, for example ocean-tiger-42, which the sender passes to the recipient. The file is deleted automatically once the chosen expiry is reached or the allowed number of downloads is used up."
+          },
+          {
+            "type": "p",
+            "text": "The service is not storage, not a backup solution and not an archiving tool. Detailed rules of use are set out in the terms of use."
+          }
+        ]
+      },
+      {
+        "id": "propriete",
+        "heading": "4. Intellectual property",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "The %site% software is free software distributed under the MIT licence. Its source code is published at %repo% and may be read, modified and reused under that licence."
+          },
+          {
+            "type": "p",
+            "text": "The %site% name, logo and visual identity remain the property of their authors: the MIT licence covers the code, not the brand and the graphic assets."
+          },
+          {
+            "type": "p",
+            "text": "Files sent by users remain the property of their owners. The publishers claim no right over their content."
+          }
+        ]
+      },
+      {
+        "id": "signalement",
+        "heading": "5. Reporting unlawful content",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "For files uploaded by users, the publishers act as a hosting service provider within the meaning of article 6 of regulation (EU) 2022/2065 on digital services and article 6 of French law no. 2004-575 of 21 June 2004 on confidence in the digital economy. They carry out no general monitoring of those files and promptly remove any manifestly unlawful content reported to them."
+          },
+          {
+            "type": "p",
+            "text": "Reports go to %contactEmail%, which also serves as the point of contact. In line with article 16 of the digital services regulation, please include:"
+          },
+          {
+            "type": "ul",
+            "items": [
+              "a sufficiently substantiated explanation of why you consider the content unlawful;",
+              "the transfer code or the exact page address, so the content can be located precisely;",
+              "your name and email address, except where the report concerns an offence referred to in articles 3 to 7 of directive 2011/93/EU;",
+              "a statement confirming your good faith belief that the information in the report is accurate and complete."
+            ]
+          },
+          {
+            "type": "p",
+            "text": "We acknowledge receipt without delay, handle the report within %abuseAck% hours and inform you of the decision taken and the redress available. No removal decision is taken by automated means. Given the expiry times in force, a reported transfer has usually already disappeared by the time the report is handled."
+          },
+          {
+            "type": "note",
+            "text": "Presenting content as unlawful while knowing that this information is inaccurate, in order to obtain its removal, is punishable by one year of imprisonment and a fine of 15,000 euros under article 6 of the LCEN."
+          }
+        ]
+      },
+      {
+        "id": "vulnerabilites",
+        "heading": "6. Reporting a security flaw",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Security flaws must be reported privately, never through a public issue or merge request. The procedure, response times and maintainer addresses are in the SECURITY.md file of the %repo% repository."
+          }
+        ]
+      },
+      {
+        "id": "liens",
+        "heading": "7. External links",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "The site links to external resources, in particular the source repository hosted by GitHub. The publishers have no control over those sites and accept no responsibility for their content."
+          }
+        ]
+      },
+      {
+        "id": "donnees",
+        "heading": "8. Personal data and cookies",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Personal data processing is described in the privacy policy. %site% uses no advertising tracker and no third-party analytics tool."
+          }
+        ]
+      },
+      {
+        "id": "droit",
+        "heading": "9. Governing law",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "This legal notice is governed by French law. In the event of a dispute, an amicable solution will first be sought at %contactEmail%. Failing agreement, the French courts have jurisdiction."
+          },
+          {
+            "type": "p",
+            "text": "The French version of this document prevails. The English translation is provided for information only."
+          }
+        ]
+      }
+    ]
+  },
+  "Terms": {
+    "eyebrow": "Terms of use",
+    "title": "Terms of use",
+    "summary": "What the service does, what it does not do, and what you agree not to upload.",
+    "intro": "These terms govern access to and use of the public instance at %siteHost%. Sending a file, downloading one with a code or creating an account means you accept them.",
+    "updated": "Last updated: {date}",
+    "tocLabel": "Contents",
+    "sections": [
+      {
+        "id": "objet",
+        "heading": "1. Purpose and acceptance",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "These terms of use govern access to and use of the %site% file transfer service as operated by %publisher% at %siteUrl%."
+          },
+          {
+            "type": "p",
+            "text": "Using the service, by sending a file, downloading a file with a code or creating an account, means you accept these terms in full. If you do not accept them, do not use the service."
+          },
+          {
+            "type": "p",
+            "text": "The service is available free of charge, with no minimum commitment and no payment of any kind."
+          }
+        ]
+      },
+      {
+        "id": "definitions",
+        "heading": "2. Definitions",
+        "blocks": [
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "Service",
+                "desc": "The public instance of %site% available at %siteUrl%, its web interface and its command line client."
+              },
+              {
+                "term": "Transfer",
+                "desc": "A file or set of files uploaded to the Service, together with their metadata and expiry date."
+              },
+              {
+                "term": "Code",
+                "desc": "The short word sequence generated for each Transfer, for example ocean-tiger-42, used to download it."
+              },
+              {
+                "term": "Sender",
+                "desc": "The person who uploads a Transfer, with or without an account."
+              },
+              {
+                "term": "Recipient",
+                "desc": "The person who downloads a Transfer using the Code."
+              },
+              {
+                "term": "Self-hosted instance",
+                "desc": "Any installation of %site% operated by a third party on its own infrastructure, to which these terms do not apply."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "fonctionnement",
+        "heading": "3. How it works, and its limits",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "The Sender uploads a file, the Service returns a Code, and the Sender passes that Code to the Recipient through any channel they choose. The Recipient enters the Code on the site or in the command line client to retrieve the file."
+          },
+          {
+            "type": "p",
+            "text": "The public instance applies the following limits:"
+          },
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "Maximum size",
+                "desc": "%maxFileSize% MB per Transfer."
+              },
+              {
+                "term": "Expiry",
+                "desc": "%defaultExpiration% minutes by default, %maxExpiration% hours at most."
+              },
+              {
+                "term": "Downloads",
+                "desc": "%defaultDownloads% by default, %maxDownloads% at most per Transfer."
+              },
+              {
+                "term": "Stored volume",
+                "desc": "%anonymousQuota% GB without an account, %userQuota% GB with an account, %groupQuota% GB per group on instances that provide them."
+              },
+              {
+                "term": "Rate",
+                "desc": "The Service may cap the number of uploads per hour, per sender and per IP address, to keep it available."
+              },
+              {
+                "term": "Protection",
+                "desc": "A password can be required to download. It is never stored in clear text."
+              }
+            ]
+          },
+          {
+            "type": "p",
+            "text": "These values reflect the current configuration of the public instance. They may be adjusted at any time for technical or security reasons, and differ on self-hosted instances."
+          },
+          {
+            "type": "note",
+            "text": "Group creation is not open on the public instance. An account there gives access to your history and personal shares. Groups and advanced administration require installing %site% on your own server."
+          }
+        ]
+      },
+      {
+        "id": "expiration",
+        "heading": "4. Expiry and deletion of Transfers",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Every Transfer is deleted automatically as soon as its expiry date is reached or the allowed number of downloads is used up, whichever comes first."
+          },
+          {
+            "type": "p",
+            "text": "That deletion is final and irreversible. No backup copy is kept and the publishers cannot restore an expired Transfer, for any reason."
+          },
+          {
+            "type": "note",
+            "text": "%site% is not a storage service, not a backup solution and not an archiving tool. Always keep the original of what you send."
+          }
+        ]
+      },
+      {
+        "id": "code",
+        "heading": "5. The Code is the key",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "A Transfer is available to anyone holding its Code, within its expiry date and remaining download count. The Service does not verify the identity of the Recipient."
+          },
+          {
+            "type": "p",
+            "text": "It is therefore up to you to pass the Code through a channel you consider safe, to pick the shortest expiry that works, and to require a password for sensitive content."
+          },
+          {
+            "type": "note",
+            "text": "Uploads made from the browser are not end-to-end encrypted: the server handles the file in clear text in order to store it. The command line client offers end-to-end encryption through the --encrypt option, in which case the server never holds the key."
+          }
+        ]
+      },
+      {
+        "id": "compte",
+        "heading": "6. Accounts",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Creating an account is optional. It requires a username, a valid email address and a password, and gives access to the history of your shares. Sending and receiving files remains possible without an account."
+          },
+          {
+            "type": "p",
+            "text": "By creating an account, you agree to the following:"
+          },
+          {
+            "type": "ul",
+            "items": [
+              "provide accurate information and keep your email address up to date;",
+              "keep your password confidential and answer for actions taken from your account;",
+              "report any unauthorised use without delay to %contactEmail%;",
+              "not use another person's account and not share your credentials."
+            ]
+          },
+          {
+            "type": "p",
+            "text": "An open session stays valid for %sessionDays% days, then expires. You can sign out at any time from your profile and request deletion of your account at %contactEmail%."
+          }
+        ]
+      },
+      {
+        "id": "usages",
+        "heading": "7. Prohibited uses",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "You are solely responsible for the files you upload and for having the right to distribute them. The Service must not be used to transmit or distribute:"
+          },
+          {
+            "type": "ul",
+            "items": [
+              "content infringing copyright, related rights, trade marks or any other intellectual property right of third parties;",
+              "child sexual abuse material, content provoking or glorifying terrorism, or inciting hatred, violence or discrimination;",
+              "content infringing privacy, image rights, the confidentiality of correspondence or the honour of others;",
+              "personal data of third parties without a legal basis allowing you to disclose it;",
+              "malware, ransomware, stolen data or stolen credentials;",
+              "content intended for a phishing campaign, mass unsolicited messaging or any other fraudulent operation."
+            ]
+          },
+          {
+            "type": "p",
+            "text": "Disrupting the Service is equally prohibited, in particular by circumventing quotas, expiry times or request rate limits, by automating uploads beyond normal use, by attempting to enumerate other people's Codes, or by seeking access to data or server components you have no right to."
+          }
+        ]
+      },
+      {
+        "id": "moderation",
+        "heading": "8. Moderation, suspension and termination",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "The publishers may, without notice, delete a manifestly unlawful Transfer reported to them, block an account that breaches these terms, restrict access from an IP address behind abusive use, and suspend or shut down the public instance."
+          },
+          {
+            "type": "p",
+            "text": "A blocked account keeps access to its profile, so its holder can challenge the measure at %contactEmail%."
+          },
+          {
+            "type": "p",
+            "text": "You may stop using the Service at any time, without justification and at no cost."
+          }
+        ]
+      },
+      {
+        "id": "disponibilite",
+        "heading": "9. Availability and absence of warranty",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "The Service is provided as is and as available, free of charge. No service level, minimum availability or restoration time is guaranteed."
+          },
+          {
+            "type": "p",
+            "text": "Access may be interrupted at any time for maintenance, updates, a technical incident or a decision to shut down the public instance. To the extent permitted by law, the publishers do not warrant uninterrupted or error-free operation, nor the preservation of Transfers."
+          }
+        ]
+      },
+      {
+        "id": "responsabilite",
+        "heading": "10. Liability",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "For files uploaded by users, the publishers act as a host within the meaning of article 6 of the LCEN. They carry out no general monitoring of content and incur liability only from the moment when, having been duly informed of manifestly unlawful content, they fail to act promptly to remove it."
+          },
+          {
+            "type": "p",
+            "text": "The Sender indemnifies the publishers against any third-party claim based on a file they uploaded."
+          },
+          {
+            "type": "p",
+            "text": "To the extent permitted by law, the publishers cannot be held liable for the loss of an expired or deleted file, for a Code disclosed by the Sender or the Recipient, for indirect damage such as loss of business or data, or for an event of force majeure."
+          },
+          {
+            "type": "p",
+            "text": "Nothing in these terms excludes the publishers' liability for gross negligence or wilful misconduct, nor the rights that the law grants users on a mandatory basis."
+          }
+        ]
+      },
+      {
+        "id": "propriete",
+        "heading": "11. Intellectual property",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "The software is distributed under the MIT licence and its source code is available at %repo%. That licence grants you no right over the %site% name, logo and visual identity."
+          },
+          {
+            "type": "p",
+            "text": "You keep every right you hold over the files you upload. You grant the publishers only the technical right to store them and transmit them to the Recipient, for the duration of the Transfer and for the purposes of the Service alone."
+          }
+        ]
+      },
+      {
+        "id": "donnees",
+        "heading": "12. Personal data",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Personal data processing, its legal bases, retention periods and the ways to exercise your rights are described in the privacy policy."
+          }
+        ]
+      },
+      {
+        "id": "autohebergement",
+        "heading": "13. Self-hosted instances",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "%site% may be installed freely on your own infrastructure. These terms then do not apply: whoever operates the instance sets its rules of use, secures it and becomes responsible for the data it processes."
+          },
+          {
+            "type": "p",
+            "text": "The software is provided with no warranty whatsoever, under the terms of the MIT licence."
+          }
+        ]
+      },
+      {
+        "id": "evolution",
+        "heading": "14. Changes to these terms",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "These terms may change, in particular to follow the Service or the applicable regulations. The version in force is the one published on this page, with its update date. Continuing to use the Service after a change means accepting the new version."
+          }
+        ]
+      },
+      {
+        "id": "droit",
+        "heading": "15. Governing law and disputes",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "These terms are governed by French law. If a problem arises, contact %contactEmail% first: an amicable solution will be sought. Failing agreement, the dispute falls to the competent French courts."
+          },
+          {
+            "type": "p",
+            "text": "The French version of this document prevails. The English translation is provided for information only."
+          }
+        ]
+      }
+    ]
+  },
+  "Privacy": {
+    "eyebrow": "Privacy",
+    "title": "Privacy policy",
+    "summary": "What data is processed, why, for how long, and how to exercise your rights.",
+    "intro": "This policy describes the personal data processing carried out on the public instance at %siteHost%. It follows one principle: collect only what the service strictly needs to work.",
+    "updated": "Last updated: {date}",
+    "tocLabel": "Contents",
+    "sections": [
+      {
+        "id": "responsable",
+        "heading": "1. Data controller",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "The data controller is %publisher%, publisher of %siteUrl%. For any question about your data, write to %contactEmail%."
+          },
+          {
+            "type": "p",
+            "text": "No data protection officer has been appointed: the nature and volume of the processing carried out do not require one."
+          }
+        ]
+      },
+      {
+        "id": "principes",
+        "heading": "2. What we do not do",
+        "blocks": [
+          {
+            "type": "ul",
+            "items": [
+              "no advertising tracker and no advertising;",
+              "no third-party analytics tool;",
+              "no sale, rental or sharing of your data for commercial purposes;",
+              "no profiling and no automated decision producing legal effects for you;",
+              "no account required to send or receive a file."
+            ]
+          },
+          {
+            "type": "p",
+            "text": "We ask for neither your real name, nor your phone number, nor your postal address, nor any payment method, the service being free. We do not use geolocation and do not enrich your data from any external source."
+          }
+        ]
+      },
+      {
+        "id": "donnees",
+        "heading": "3. Data processed, purposes and retention",
+        "blocks": [
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "Files and metadata",
+                "desc": "Name, size, type, Code, integrity checksum, expiry date, remaining download count and optional message. Purpose: carry out the requested transfer. Legal basis: performance of the contract, article 6.1.b GDPR. Retention: until expiry, that is %defaultExpiration% minutes by default and %maxExpiration% hours at most, or until the last allowed download."
+              },
+              {
+                "term": "Transfer password",
+                "desc": "Purpose: restrict downloading to whoever knows the password. Legal basis: performance of the contract. Retention: only as an Argon2id hash, erased along with the Transfer. The password is never stored in clear text."
+              },
+              {
+                "term": "Account",
+                "desc": "Username, email address, Argon2id hash of the password, role and creation date. Purpose: authenticate the user and give access to the history of their shares. Legal basis: performance of the contract. Retention: until the account is deleted."
+              },
+              {
+                "term": "Session",
+                "desc": "Session token and expiry date, kept server-side, with a copy in your browser's local storage. Purpose: keep you signed in between visits. Legal basis: performance of the contract. Retention: %sessionDays% days at most, or until you sign out."
+              },
+              {
+                "term": "Sender identifier",
+                "desc": "Random identifier generated by your browser or command line client when you upload without an account. Purpose: attach a Transfer to its sender so quotas can be applied. Legal basis: legitimate interest in protecting the Service against abuse. Retention: in your browser until local storage is cleared, and server-side for the duration of the Transfer."
+              },
+              {
+                "term": "IP address",
+                "desc": "Purpose: route requests to the server and, when rate limiting is enabled, cap abusive uploads. Legal basis: legitimate interest in the security and availability of the Service. Retention: the IP address is processed transiently, for the duration of the request. No access log is configured on the server and the IP address is stored neither in the database nor in a Transfer's metadata."
+              },
+              {
+                "term": "Messages you send us",
+                "desc": "Email address and content of your reports or requests. Purpose: handle your request and keep a record of it. Legal basis: legitimate interest in replying and documenting reports. Retention: %mailMonths% months."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cookies",
+        "heading": "4. Cookies and local storage",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "%site% uses no advertising cookie and no third-party analytics tool. What is stored on your device is strictly necessary to run the site, which exempts it from consent collection."
+          },
+          {
+            "type": "dl",
+            "items": [
+              {
+                "term": "sidebar_state cookie",
+                "desc": "Remembers whether the dashboard sidebar is expanded or collapsed. Lifetime: 7 days."
+              },
+              {
+                "term": "Local storage, session",
+                "desc": "Keeps your session token so you do not have to sign in on every visit. Cleared when you sign out."
+              },
+              {
+                "term": "Local storage, sender identifier",
+                "desc": "Random identifier used to apply quotas to uploads made without an account."
+              },
+              {
+                "term": "Local storage, theme",
+                "desc": "Remembers your light or dark display preference."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "securite",
+        "heading": "5. Security",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Traffic to the Service is encrypted in transit with TLS. Account and Transfer passwords are stored as Argon2id hashes. Transfers expire and are deleted automatically, which mechanically shortens the exposure window. The source code is public and can be audited at %repo%."
+          },
+          {
+            "type": "note",
+            "text": "To be clear: uploads made from the browser are not end-to-end encrypted, the server handles the file in clear text in order to store it. If you need the server to never be able to read your file, use the command line client with the --encrypt option."
+          }
+        ]
+      },
+      {
+        "id": "destinataires",
+        "heading": "6. Recipients and location",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Your data is never sold, rented or passed to third parties for commercial purposes."
+          },
+          {
+            "type": "p",
+            "text": "The Service runs on a server the publishers administer themselves, with no third-party storage service and no public cloud. %host% provides network connectivity and IP addressing: that provider carries the traffic and does not access stored content."
+          },
+          {
+            "type": "p",
+            "text": "Data is hosted within the European Union. No data is transferred outside the European Union."
+          },
+          {
+            "type": "p",
+            "text": "It may be disclosed to judicial or administrative authorities where the law requires it."
+          }
+        ]
+      },
+      {
+        "id": "droits",
+        "heading": "7. Your rights",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "Under the conditions set out in the GDPR, you have the rights of access, rectification, erasure, restriction of processing, objection and portability, as well as the right to give directions on what happens to your data after your death."
+          },
+          {
+            "type": "p",
+            "text": "To exercise them, write to %contactEmail%, ideally from the address linked to your account. We reply within one month, extendable by two months for complex requests. Proof of identity may be requested where there is reasonable doubt about who is asking."
+          },
+          {
+            "type": "note",
+            "text": "Transfers sent without an account are not linked to any identity. Without the matching Code, we have no way to find a file you may have sent, which limits in practice the exercise of rights over that data. A Transfer whose Code you give us, on the other hand, is deleted immediately."
+          },
+          {
+            "type": "p",
+            "text": "You may also lodge a complaint with the French data protection authority, %authority%, %authorityAddress%, %authorityUrl%."
+          }
+        ]
+      },
+      {
+        "id": "suppression",
+        "heading": "8. Deleting your data",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "A Transfer can be deleted before it expires by sending us its Code at %contactEmail%. Otherwise it disappears on its own once the chosen expiry is reached."
+          },
+          {
+            "type": "p",
+            "text": "Account deletion is requested at the same address: it erases the username, the email address, the password hash and the associated sessions."
+          }
+        ]
+      },
+      {
+        "id": "mineurs",
+        "heading": "9. Minors",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "The Service is not intended for people under fifteen without the agreement of a parent or guardian. If you notice an account created in those circumstances, report it to %contactEmail% so it can be deleted."
+          }
+        ]
+      },
+      {
+        "id": "autohebergement",
+        "heading": "10. Self-hosted instances",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "This policy covers only the public instance at %siteHost%. When %site% is installed on a third party's infrastructure, whoever operates that instance becomes the data controller and sets its own retention and security rules."
+          }
+        ]
+      },
+      {
+        "id": "evolution",
+        "heading": "11. Changes to this policy",
+        "blocks": [
+          {
+            "type": "p",
+            "text": "This policy may be updated to reflect changes to the Service or to the applicable regulations. The date of the last update appears at the top of this page and, for a substantial change, a notice is published on the site."
+          },
+          {
+            "type": "p",
+            "text": "The French version of this document prevails. The English translation is provided for information only."
+          }
+        ]
+      }
+    ]
   },
   "Send": {
     "back": "Back",
