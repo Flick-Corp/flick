@@ -574,10 +574,17 @@ export async function loadUserConfiguration(signal?: AbortSignal): Promise<Recor
   return data as Record<string, string | number | boolean>
 }
 
-export async function loadConfiguration(signal?: AbortSignal): Promise<Record<string, string | number | boolean>> {
+export async function loadConfiguration(
+  token: string,
+  signal?: AbortSignal
+): Promise<Record<string, string | number | boolean>> {
   const url = apiUrl("/configure")
 
-  const res = await fetch(url.toString(), { method: "GET", signal })
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+    signal,
+  })
   if (!res.ok) {
     throw new ApiError(res.status, parseErrorMessage(await res.text().catch(() => ""), res.statusText))
   }
@@ -590,6 +597,7 @@ export async function loadConfiguration(signal?: AbortSignal): Promise<Record<st
 }
 
 export async function saveConfiguration(
+  token: string,
   values: Record<string, string | number | boolean>,
   signal?: AbortSignal
 ): Promise<void> {
@@ -597,7 +605,10 @@ export async function saveConfiguration(
 
   const res = await fetch(url.toString(), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(values),
     signal,
   })

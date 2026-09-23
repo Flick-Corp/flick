@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { ApiError, getConfigureUrl, loadConfiguration, saveConfiguration } from "@/lib/api"
+import { loadSession } from "@/lib/auth"
 import { type SettingField, type SettingSection, settingsSections } from "@/lib/settings-config"
 
 type Values = Record<string, string | number | boolean>
@@ -50,7 +51,7 @@ export function SettingsForm() {
     const ctrl = new AbortController()
     setLoading(true)
     setLoadError(null)
-    loadConfiguration(ctrl.signal)
+    loadConfiguration(loadSession()?.token ?? "", ctrl.signal)
       .then((remote) => {
         setValues((prev) => {
           const merged: Values = { ...prev }
@@ -84,7 +85,7 @@ export function SettingsForm() {
     setSaving(true)
     setSaveError(null)
     try {
-      await saveConfiguration(values)
+      await saveConfiguration(loadSession()?.token ?? "", values)
       setSavedAt(new Date().toLocaleTimeString())
     } catch (err) {
       console.error("saveConfiguration failed", err)
